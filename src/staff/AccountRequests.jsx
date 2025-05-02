@@ -1,24 +1,115 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import logo from '...';
-import home from '...';
-import profile from '...';
-import book from '...';
-import borrow from '...';
-import user from '...';
-import logoutImg from '...';
-import searchIcon from '...';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import logo from '../assets/logo.png';
+import home from '../assets/home.png';
+import profile from '../assets/profile-2user.png';
+import book from '../assets/book.png';
+import borrow from '../assets/bookmark-2.png';
+import userIcon from '../assets/user.png';
+import logoutImg from '../assets/logout.png';
+import plusBook from '../assets/Plusbook.png';
+import toast from 'react-hot-toast';
+export default function AccountRequests() {
+    const navigate = useNavigate();
+    const [user, setUser] = useState({});
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState('all');
+    const [currentPage, setCurrentPage] = useState(0);
+    const [modalUser, setModalUser] = useState(null);
+    const [requests, setRequests] = useState([]);
+    const [totalRequests, setTotalRequests] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [newStatus, setNewStatus] = useState("Approved");
 
-export default function AccountRequests({ user, requests, totalRequests, logout }) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [currentPage, setCurrentPage] = useState(0);
-  const [modalUser, setModalUser] = useState(null);
+    const handleSearch = (e) => setSearchQuery(e.target.value);
 
-  const handleSearch = (e) => setSearchQuery(e.target.value);
+    const openModal = (user) => {setNewStatus("Approved"), setModalUser(user)};
+    const closeModal = () => setModalUser(null);
 
-  const openModal = (user) => setModalUser(user);
-  const closeModal = () => setModalUser(null);
+    const logout = () => {
+        localStorage.removeItem("user");
+        navigate("/sign-in",{replace: true});
+        console.log('Logging out...');
+        window.history.pushState(null, "", window.location.href);
+        window.onpopstate = function() {
+        window.history.pushState(null, "", window.location.href);
+        };
+    };
+    useEffect(() => {
+        setUser(JSON.parse(localStorage.getItem("user")));
+        fetchAccountRequests(selectedStatus);
+    }, [selectedStatus, currentPage]);
+  
+    const fetchAccountRequests = async(status = "all")=>{
+        const user = JSON.parse(localStorage.getItem("user"));
+        let sortBy = "joinDate";
+        let direction = "desc";
+
+        const params = new URLSearchParams();
+        if (status !== "all") params.append("status", status);
+        params.append("page", currentPage);
+        params.append("sortBy", sortBy);
+        params.append("direction", direction);
+        try {
+        const response = await fetch(`http://localhost:8080/api/staff/accountRequests?${params.toString()}`,{
+            method: "GET",
+            headers: {
+            'Content-type': 'application/json',
+            "Authorization": `Bearer ${user?.token || ''}`
+            }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            if(data.error){
+                setRequests([]);
+                setTotalPages(0);
+                setTotalRequests(0);
+                throw new Error(data.error);
+            }
+            throw new Error(`Failed to fetch requests`);
+        }
+        
+        
+        console.log(data);
+        setRequests(data._embedded.userList);
+        setTotalPages(data.page.totalPages);
+        setTotalRequests(data.page.totalElements);
+        
+        } catch (error) {
+        console.log(`Error fetching requests:`, error);
+        
+        }
+    }
+    const reviewAccount = async(userId)=>{
+        const user = JSON.parse(localStorage.getItem("user"));
+        console.log(user);
+
+        const params = new URLSearchParams();
+        params.append("status",newStatus);
+        try {
+        const response = await fetch(`http://localhost:8080/api/staff/reviewAccount/${userId}?${params.toString()}`,{
+            method: "PATCH",
+            headers: {
+            "Authorization": `Bearer ${user?.token || ''}`
+            }
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            if(data.error){
+                console.log(data.error);
+            }
+            throw new Error(`Failed to fetch requests`);
+        }
+        console.log(data);
+        fetchAccountRequests(selectedStatus);
+        closeModal();
+        toast.success('Account reviewed successfully.');
+        } catch (error) {
+        console.log(`Error fetching requests:`, error);
+        
+        }
+    }
+    
 
   return (
     <div className="bg-[#f8f8ff] rounded-2xl relative min-h-screen overflow-y-auto">
@@ -51,7 +142,7 @@ export default function AccountRequests({ user, requests, totalRequests, logout 
               <p className="text-[#475569] text-sm font-medium">Borrow Requests</p>
             </Link>
             <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#25388c] cursor-pointer">
-              <img src={user} alt="Account Icon" className="w-5 h-5 filter brightness-0 invert" />
+              <img src={userIcon} alt="Account Icon" className="w-5 h-5 filter brightness-0 invert" />
               <p className="text-white text-sm font-medium">Account Requests</p>
             </div>
           </div>
@@ -61,7 +152,7 @@ export default function AccountRequests({ user, requests, totalRequests, logout 
         <div className="bg-white rounded-[62px] border border-[#edf1f1] px-3 py-2 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3">
             <div className="flex flex-col">
-              <span className="font-medium text-[#1e293b]">{user.fullname}</span>
+              <span className="font-medium text-[#1e293b]">{user?.fullName}</span>
               <span className="text-xs text-[#64748b]">admin@univ-mosta.dz</span>
             </div>
           </div>
@@ -78,7 +169,7 @@ export default function AccountRequests({ user, requests, totalRequests, logout 
           <p className="text-[#64748b] text-sm">Manage user account approval requests</p>
         </div>
         <div className="relative w-[400px]">
-          <img src={searchIcon} alt="Search Icon" className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" />
+          <img src={"searchIcon"} alt="Search Icon" className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" />
           <input
             type="search"
             placeholder="Search by name, email, or ID"
@@ -127,18 +218,32 @@ export default function AccountRequests({ user, requests, totalRequests, logout 
                 {requests.length > 0 ? (
                   requests.map((req) => (
                     <tr key={req.id} className="border-b border-[#e2e8f0]">
-                      <td className="px-4 py-4">
-                        <p className="font-medium text-[#1e293b]">{req.fullName}</p>
-                        <p className="text-[#64748b] text-sm">{req.email}</p>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-[#475569]">{req.universityId}</td>
-                      <td className="px-4 py-4 text-sm text-[#475569]">{req.joinDate}</td>
-                      <td className="px-4 py-4 text-sm text-[#475569] capitalize">{req.status}</td>
-                      <td className="px-4 py-4">
-                        <button onClick={() => openModal(req)} className="px-3 py-1.5 bg-[#25388c] text-white rounded-lg text-xs font-medium hover:bg-[#1e2a6d] transition">
-                          Review Request
-                        </button>
-                      </td>
+                        <td className="px-4 py-4">
+                            <p className="font-medium text-[#1e293b]">{req.fullName}</p>
+                            <p className="text-[#64748b] text-sm">{req.email}</p>
+                        </td>
+                        <td className="px-4 py-4 text-sm text-[#475569]">{req.identifier}</td>
+                        <td className="px-4 py-4 text-sm text-[#475569]">{req.joinDate}</td>
+                        <td className="px-4 py-4 text-sm text-[#475569]">
+                            <span className={`px-4 py-1 rounded-full text-xs font-medium ${
+                            req.accountStatus === "APPROVED" 
+                                ? 'bg-[#f0fdf4] text-[#15803d]' 
+                                : req.accountStatus === "PENDING"
+                                    ? 'bg-[#fff7ed] text-[#c2410c]'
+                                    : 'bg-[#fee2e2] text-[#dc2626]'
+                            }`}>
+                            {req.accountStatus === "APPROVED" 
+                                ? 'Approved' 
+                                : req.accountStatus === "PENDING"
+                                    ? 'Pending'
+                                    : 'Rejected'}
+                            </span>
+                        </td>
+                        <td className="px-4 py-4">
+                            <button onClick={() => openModal(req)} className="px-3 py-1.5 bg-[#25388c] text-white rounded-lg text-xs font-medium hover:bg-[#1e2a6d] transition">
+                            Review Request
+                            </button>
+                        </td>
                     </tr>
                   ))
                 ) : (
@@ -158,15 +263,19 @@ export default function AccountRequests({ user, requests, totalRequests, logout 
                 <div className="mb-4">
                   <p className="font-medium text-[#1e293b]">{modalUser.fullName}</p>
                   <p className="text-[#64748b] text-sm">{modalUser.email}</p>
-                  <p className="text-sm text-[#475569] mt-2">University ID: {modalUser.universityId}</p>
+                  <p className="text-sm text-[#475569] mt-2">University ID: {modalUser.identifier}</p>
                 </div>
-                <select className="w-full border border-[#e2e8f0] rounded-lg text-sm px-4 py-2 mb-4" defaultValue={modalUser.status}>
+                <select className="w-full border border-[#e2e8f0] rounded-lg text-sm px-4 py-2 mb-4" defaultValue={modalUser.AccountStatus}
+                    onChange={(e)=>setNewStatus(e.target.value)}
+                >
                   <option value="approved">Approve</option>
                   <option value="rejected">Reject</option>
                 </select>
                 <div className="flex justify-end gap-2">
                   <button onClick={closeModal} className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm">Cancel</button>
-                  <button className="px-4 py-2 bg-[#25388c] text-white rounded-lg text-sm hover:bg-[#1e2a6d]">Submit</button>
+                  <button className="px-4 py-2 bg-[#25388c] text-white rounded-lg text-sm hover:bg-[#1e2a6d]"
+                    onClick={() => reviewAccount(modalUser.id)}
+                  >Submit</button>
                 </div>
               </div>
             </div>

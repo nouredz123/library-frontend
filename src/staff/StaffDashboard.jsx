@@ -105,7 +105,7 @@ export default function StaffDashboard() {
             <img src={borrow} alt="Borrow Icon" className="w-5 h-5" />
             <p className="text-[#475569] text-sm font-medium">Borrow Requests</p>
           </Link>
-          <Link to="/staff/accountrequests" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#f8fafc] cursor-pointer">
+          <Link to="/staff/accountRequests" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#f8fafc] cursor-pointer">
             <img src={user} alt="Account Icon" className="w-5 h-5" />
             <p className="text-[#475569] text-sm font-medium">Account Requests</p>
           </Link>

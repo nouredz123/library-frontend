@@ -8,6 +8,7 @@ import borrow from '../assets/bookmark-2.png';
 import user from '../assets/user.png';
 import logoutImg from '../assets/logout.png';
 import UserItem from '../components/UserItem';
+import toast from 'react-hot-toast';
 
 const AllUsers = () => {
   const [users, setUsers] = useState([]);
@@ -89,7 +90,7 @@ const AllUsers = () => {
         }
         
         console.log(data);
-        alert(data.message);
+        toast.success("🗑️", data.message);
         fetchUsers();
       } catch (error) {
         console.log(`Error deleting  the user:`, error);

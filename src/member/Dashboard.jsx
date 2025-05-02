@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { departments } from '../constants';
 import logoutImg from '../assets/logout.png';
 import logo from '../assets/logo.png';
+import toast from 'react-hot-toast';
 export default function Dashboard() {
   // State for selected department and books
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -15,26 +16,33 @@ export default function Dashboard() {
   const borrow = async (bookId) => {
     const user = JSON.parse(localStorage.getItem("user"));
     console.log("token:", user.token);
-    const response = await fetch("http://localhost:8080/api/member/borrow",{
-      method: 'POST',
-      headers: {
-        'Content-type': 'application/json',
-        'Authorization' : `Bearer ${user.token}`
-      },
-      body: JSON.stringify({
-        bookId,
-        memberId: user.id,
-        pickupDate: "2025-01-01",
-        returnDate: "2525-09-09"
+    try {
+      const response = await fetch("http://localhost:8080/api/member/borrow",{
+        method: 'POST',
+        headers: {
+          'Content-type': 'application/json',
+          'Authorization' : `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          bookId,
+          memberId: user.id,
+          pickupDate: "2025-01-01",
+          returnDate: "2525-09-09"
+        })
       })
-    })
-    if (!response.ok) {
-      const error = await response.text();
-      console.error("Borrow failed:", error);
-    } else {
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error);
+      }
       const data = await response.json();
+      toast.success("Borrowings done successfully");
       console.log("Borrow successful:", data);
+      
+    } catch (error) {
+      toast.error(error.message);
+      console.log("Error:", error.message);
     }
+    
   }
 
   // Function to fetch books by department

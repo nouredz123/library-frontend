@@ -4,7 +4,7 @@ import home from '../assets/home.png';
 import profile from '../assets/profile-2user.png';
 import book from '../assets/book.png';
 import borrow from '../assets/bookmark-2.png';
-import user from '../assets/user.png';
+import userIcon from '../assets/user.png';
 import logoutImg from '../assets/logout.png';
 import plusBook from '../assets/Plusbook.png';
 import { Link, useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ import BookItem from '../components/BookItem';
 import Pagination from '../components/Pagination';
 
 export default function AllBooks() {
+  const [user, setUser] = useState({});
     const [books, setBooks] = useState([]);
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
@@ -26,23 +27,15 @@ export default function AllBooks() {
       // Implement the filtering logic here based on searchQuery
     };
   
-    const handleDepartmentChange = (e) => {
-      setSelectedDepartment(e.target.value);
-      // Filter books by department
-    };
-  
-    const handleSortChange = (e) => {
-      setSortOrder(e.target.value);
-      // Sort books based on sortOrder
-    };
-  
     const deleteBook = (bookId) => {
       // Handle deleting a book by its ID
       console.log("Deleting book with ID:", bookId);
     };
     useEffect(() => {
-        fetchBooks(selectedDepartment, sortOrder);
+      setUser(JSON.parse(localStorage.getItem("user")));
+      fetchBooks(selectedDepartment, sortOrder);
       }, [selectedDepartment, sortOrder, currentPage]);
+      
       const logout = () => {
         localStorage.removeItem("user");
         navigate("/sign-in",{replace: true});
@@ -139,7 +132,7 @@ export default function AllBooks() {
             <p className="text-[#475569] text-sm font-medium">Borrow Requests</p>
           </Link>
           <Link to="/staff/accountrequests" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#f8fafc] cursor-pointer">
-            <img src={user} alt="Account Icon" className="w-5 h-5" />
+            <img src={userIcon} alt="Account Icon" className="w-5 h-5" />
             <p className="text-[#475569] text-sm font-medium">Account Requests</p>
           </Link>
         </div>
@@ -149,7 +142,7 @@ export default function AllBooks() {
       <div className="bg-white rounded-[62px] border border-[#edf1f1] px-3 py-2 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
-            <span className="font-medium text-[#1e293b]">{user.fullname}</span>
+            <span className="font-medium text-[#1e293b]">{user?.fullName}</span>
             <span className="text-xs text-[#64748b]">admin@univ-mosta.dz</span>
           </div>
         </div>

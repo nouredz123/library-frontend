@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import eye from '../assets/eye.png';
 import eyeSlash from '../assets/eye-slash.png';
 import logo from '../assets/logo.png';
+import backgroundImage from '../assets/image-14.jpg';
+import toast from 'react-hot-toast';
 export default function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +17,7 @@ export default function SignIn() {
 
   const handleLogin = () => {
     if (!username || !password) {
-      alert("Please fill in both username and password.");
+      toast.error("Please fill in both username and password.");
       return;
     }
     login();
@@ -43,8 +45,8 @@ export default function SignIn() {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Login failed: ${response.status} - ${errorText}`);
+        const data = await response.json();
+        throw new Error(data.error);
       }
 
       const data = await response.json();
@@ -54,14 +56,18 @@ export default function SignIn() {
       if (data && data.role =="MEMBER") {
         localStorage.setItem("user", JSON.stringify(data));
         navigate("/member/Dashboard");
+        toast.success("loged in successfully");
       } else if (data.role =="STAFF") {
         localStorage.setItem("user", JSON.stringify(data));
         navigate("/staff/dashboard");
+        toast.success("loged in successfully");
       } else {
+        toast.error("Invalid role or missing token");
         console.error("Invalid role or missing token");
       }
 
     } catch (error) {
+      toast.error(error.message)
       console.error("Error:", error.message);
     }
   };
@@ -168,7 +174,7 @@ export default function SignIn() {
           {/* Right Side Image */}
           <img
             className="image absolute right-0 top-0 w-[700px] h-full object-cover"
-            src="/assets/images/image-14.jpg"
+            src={backgroundImage}
             alt="Bookshelf"
           />
         </div>
