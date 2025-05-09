@@ -13,13 +13,26 @@ export default function AccountRequests() {
     const navigate = useNavigate();
     const [user, setUser] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedStatus, setSelectedStatus] = useState('all');
+    const [selectedStatus, setSelectedStatus] = useState('pending');
     const [currentPage, setCurrentPage] = useState(0);
     const [modalUser, setModalUser] = useState(null);
     const [requests, setRequests] = useState([]);
     const [totalRequests, setTotalRequests] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [newStatus, setNewStatus] = useState("Approved");
+
+
+    const [selectedImage, setSelectedImage] = useState(null);
+
+    // Handler to open modal with the selected image
+    const openImageModal = (imageUrl) => {
+      setSelectedImage(imageUrl);
+    };
+
+    // Handler to close the modal
+    const closeImageModal = () => {
+      setSelectedImage(null);
+    };
 
     const handleSearch = (e) => setSearchQuery(e.target.value);
 
@@ -71,7 +84,7 @@ export default function AccountRequests() {
         
         
         console.log(data);
-        setRequests(data._embedded.userList);
+        setRequests(data._embedded.userResponseList);
         setTotalPages(data.page.totalPages);
         setTotalRequests(data.page.totalElements);
         
@@ -210,12 +223,13 @@ export default function AccountRequests() {
                   <th className="px-4 py-4 text-left text-sm text-[#64748b] font-medium whitespace-nowrap">Member Details</th>
                   <th className="px-4 py-4 text-left text-sm text-[#64748b] font-medium whitespace-nowrap">University ID</th>
                   <th className="px-4 py-4 text-left text-sm text-[#64748b] font-medium whitespace-nowrap">Join Date</th>
+                  <th className="px-4 py-4 text-left text-sm text-[#64748b] font-medium whitespace-nowrap">Card</th>
                   <th className="px-4 py-4 text-left text-sm text-[#64748b] font-medium whitespace-nowrap">Status</th>
                   <th className="px-4 py-4 text-left text-sm text-[#64748b] font-medium whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {requests.length > 0 ? (
+                {Array.isArray(requests) && requests.length > 0 ? (
                   requests.map((req) => (
                     <tr key={req.id} className="border-b border-[#e2e8f0]">
                         <td className="px-4 py-4">
@@ -224,6 +238,15 @@ export default function AccountRequests() {
                         </td>
                         <td className="px-4 py-4 text-sm text-[#475569]">{req.identifier}</td>
                         <td className="px-4 py-4 text-sm text-[#475569]">{req.joinDate}</td>
+                        <td className="px-2 py-2 text-sm text-[#475569]">
+                            {/* Image display here */}
+                            <img 
+                                src={req.cardBase64 ? `data:${req.cardContentType};base64,${req.cardBase64}` : '/default-card.png'} 
+                                alt="User Card"
+                                className="w-20 h-12 object-cover"  // Adjust size as needed
+                                onClick={() => openImageModal(req.cardBase64 ? `data:${req.cardContentType};base64,${req.cardBase64}` : '/default-card.png')}
+                            />
+                        </td>
                         <td className="px-4 py-4 text-sm text-[#475569]">
                             <span className={`px-4 py-1 rounded-full text-xs font-medium ${
                             req.accountStatus === "APPROVED" 
@@ -254,6 +277,23 @@ export default function AccountRequests() {
               </tbody>
             </table>
           </div>
+          {/* Modal for larger image */}
+          {selectedImage && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-2xl p-6 w-[500px] shadow-lg">
+                <div className="flex justify-end">
+                  <button onClick={closeImageModal} className="text-[#475569] text-lg font-semibold">
+                    Close
+                  </button>
+                </div>
+                <img
+                  src={selectedImage}
+                  alt="Large User Card"
+                  className="w-full h-auto object-contain"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Modal */}
           {modalUser && (

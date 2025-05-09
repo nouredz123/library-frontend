@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function UserItem({user,deleteUser}) {
+export default function UserItem({user,onDeleteClick}) {
   return (
     <tr className="hover:bg-[#f8fafc]">
         <td className="p-2">
@@ -32,7 +32,7 @@ export default function UserItem({user,deleteUser}) {
             <div className="flex gap-2">
             <button
                 onClick={() => {
-                deleteUser(user.id);
+                    onDeleteClick(user);
                 }}
                 className="px-4 py-2 bg-[#fee2e2] text-[#dc2626] rounded text-xs font-medium"
             >

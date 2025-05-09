@@ -1,17 +1,23 @@
 import { ArrowLeft, Book, ChevronLeft, ChevronRight, Logout } from '@mui/icons-material';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { departments } from '../constants';
 import logoutImg from '../assets/logout.png';
 import logo from '../assets/logo.png';
 import toast from 'react-hot-toast';
+import BookCard from '../components/BookCard';
+
 export default function Dashboard() {
-  // State for selected department and books
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  
+    
   const navigate = useNavigate();
+
+  
 
   const borrow = async (bookId) => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -145,7 +151,7 @@ export default function Dashboard() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
                   {books.map((book) => (
-                    <BookCard key={book.id} book={book} borrow={borrow}/>
+                    <BookCard key={book.id} book={book}/>
                   ))}
                 </div>
               )}
@@ -192,37 +198,3 @@ export default function Dashboard() {
   );
 }
 
-const BookCard = ({ book, borrow }) => (
-  <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition">
-  <div className="h-48 bg-gray-700 flex items-center justify-center">
-    {book.coverUrl ? (
-      <img src={book.coverUrl} alt={book.title} className="h-full object-cover" />
-    ) : (
-      <Book size={64} className="text-gray-500" />
-    )}
-  </div>
-  <div className="p-4">
-    <h3 className="text-lg font-bold truncate text-white">{book.title}</h3>
-    <p className="text-gray-400 text-sm mb-2">By {book.author || 'Unknown'}</p>
-    <div className="flex flex-col gap-2 mt-2">
-      <div className="flex justify-between items-center">
-        <span className="text-xs bg-gray-700 text-gray-300 px-2 py-1 rounded">
-          {book.editionYear || 'N/A'}
-        </span>
-        <div className={`text-xs ${book.available ? "text-green-500" : "text-red-500"}`}>{book.available ? "Available" : "Not available"}</div>
-      </div>
-      <div className="flex justify-between items-center mt-2">
-        <button className="bg-red-600 text-white text-sm py-1 px-3 rounded hover:bg-red-700 transition">
-          View Details
-        </button>
-        <button 
-          className="bg-blue-600 text-white text-sm py-1 px-3 rounded hover:bg-blue-700 transition"
-          onClick={()=> borrow(book.id)}
-        >
-          Borrow
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-);

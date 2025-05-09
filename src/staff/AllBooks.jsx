@@ -7,6 +7,7 @@ import borrow from '../assets/bookmark-2.png';
 import userIcon from '../assets/user.png';
 import logoutImg from '../assets/logout.png';
 import plusBook from '../assets/Plusbook.png';
+import bookNotAvailable from '../assets/book-notAvailable.jpg'
 import { Link, useNavigate } from 'react-router-dom';
 import BookItem from '../components/BookItem';
 import Pagination from '../components/Pagination';

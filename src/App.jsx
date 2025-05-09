@@ -10,6 +10,7 @@ import AllBooks from './staff/AllBooks';
 import SignUp from './auth/sign-up';
 import AccountRequests from './staff/AccountRequests';
 import { Toaster } from 'react-hot-toast';
+import Search from './member/Search';
 function App() {
   return (
     <>
@@ -20,6 +21,7 @@ function App() {
         <Route path='/sign-up' element={<SignUp />} />
         <Route path='/member/Dashboard' element={(<Dashboard />)} />
         <Route path='/member/profile' element={(<Profile />)} />
+        <Route path='/member/Search' element={(<Search />)} />
         <Route path='/staff/Dashboard' element={(<StaffDashboard />)} />
         <Route path='/staff/AllUsers' element={(<AllUsers />)} />
         <Route path='/staff/AllBooks' element={(<AllBooks />)} />

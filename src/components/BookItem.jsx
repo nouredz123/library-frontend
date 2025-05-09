@@ -1,4 +1,5 @@
 import React from 'react'
+import bookNotAvailable from '../assets/book-notAvailable.jpg'
 
 export default function BookItem({ book, deleteBook }) {
   console.log(book);
@@ -11,7 +12,9 @@ export default function BookItem({ book, deleteBook }) {
           <img 
             src={book.coverUrl} 
             alt="Book Cover" 
-            className="w-12 h-16 object-cover rounded" 
+            loading='lazy'
+            className="w-12 h-16 object-cover rounded bg-black" 
+            onError={(e) => e.target.src = bookNotAvailable}
           />
           <div>
             <p className="font-medium text-[#1e293b]">{book.title}</p>

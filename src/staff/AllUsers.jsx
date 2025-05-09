@@ -9,12 +9,16 @@ import user from '../assets/user.png';
 import logoutImg from '../assets/logout.png';
 import UserItem from '../components/UserItem';
 import toast from 'react-hot-toast';
+import AdminSideBar from '../components/AdminSideBar';
 
 const AllUsers = () => {
   const [users, setUsers] = useState([]);
   const [selectedRole, setSelectedRole] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleteModal, setShowDeleteModal]= useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const navigate = useNavigate();
     
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
@@ -67,21 +71,36 @@ const AllUsers = () => {
       
       const data = await response.json();
       console.log(data);
-      setUsers(data._embedded.userList);
+      setUsers(data._embedded.userResponseList);
       console.log("fetching done");
       
     } catch (error) {
       console.log(`Error fetching users:`, error);
     }
   }
-  const deleteUser = async(userId)=>{
-    const user = JSON.parse(localStorage.getItem("user"));
+  const handleOpenDeleteModal = (user) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+  const handleConfirmDelete = () => {
+    if (selectedUser) {
+      deleteUser(selectedUser);
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+    }
+  };
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setSelectedUser(null);
+  };
+  const deleteUser = async(user)=>{
+    const currentUser = JSON.parse(localStorage.getItem("user"));
     console.log("token:", user.token);
       try {
-        const response = await fetch(`http://localhost:8080/api/staff/deleteUser/${userId}`,{
+        const response = await fetch(`http://localhost:8080/api/staff/deleteUser/${user.id}`,{
           method: "DELETE",
           headers: {
-            "Authorization": `Bearer ${user?.token || ''}`
+            "Authorization": `Bearer ${currentUser?.token || ''}`
           }
         });
         const data = await response.json();
@@ -90,7 +109,7 @@ const AllUsers = () => {
         }
         
         console.log(data);
-        toast.success("🗑️", data.message);
+        toast.success(`🗑️ ${data.message}`);
         fetchUsers();
       } catch (error) {
         console.log(`Error deleting  the user:`, error);
@@ -101,57 +120,7 @@ const AllUsers = () => {
 
   return (
     <div className="bg-[#f8f8ff] rounded-2xl relative min-h-screen overflow-y-auto">
-      {/* Sidebar */}
-      <div className="fixed top-0 left-0 h-screen w-[288px] bg-white border-r border-[#edf1f1] flex flex-col justify-between p-4">
-        {/* Top Section */}
-        <div>
-          <div className="py-5 flex flex-row gap-1.5 items-center">
-            <img src={logo} alt="BookFSEI Logo" className="w-10 h-10" />
-            <div className="text-[#25388c] font-semibold text-[26px] leading-6">
-              BookFSEI
-            </div>
-        </div>
-        <div className="border-t border-dashed border-[#8c8e98] my-4"></div>
-  
-        {/* Menu */}
-        <div className="flex flex-col gap-2">
-          <Link to="/staff/Dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#f8fafc] cursor-pointer">
-            <img src={home} alt="Home Icon" className="w-5 h-5" />
-            <p className="text-[#475569] text-sm font-medium">Home</p>
-          </Link>
-          <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#25388c] cursor-pointer">
-            <img src={profile} alt="Books Icon" className="w-5 h-5 filter brightness-0 invert" />
-            <p className="text-white text-sm font-medium">All Users</p>
-          </div>
-          <Link to="/staff/AllBooks" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#f8fafc] cursor-pointer">
-            <img src={book} alt="Users Icon" className="w-5 h-5" />
-            <p className="text-[#475569] text-sm font-medium">All Books</p>
-          </Link>
-          
-          <Link to="/staff/borrowrequests" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#f8fafc] cursor-pointer">
-            <img src={borrow} alt="Borrow Icon" className="w-5 h-5" />
-            <p className="text-[#475569] text-sm font-medium">Borrow Requests</p>
-          </Link>
-          <Link to="/staff/accountrequests" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-[#f8fafc] cursor-pointer">
-            <img src={user} alt="Account Icon" className="w-5 h-5" />
-            <p className="text-[#475569] text-sm font-medium">Account Requests</p>
-          </Link>
-        </div>
-      </div>
-  
-      {/* Bottom Admin Section */}
-      <div className="bg-white rounded-[62px] border border-[#edf1f1] px-3 py-2 flex items-center justify-between shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col">
-            <span className="font-medium text-[#1e293b]">{user.fullname}</span>
-            <span className="text-xs text-[#64748b]">admin@univ-mosta.dz</span>
-          </div>
-        </div>
-        <button onClick={logout} className="p-1">
-          <img src={logoutImg} alt="Logout" className="w-6 h-6" />
-        </button>
-      </div>
-    </div>
+      <AdminSideBar />
 
       {/* Main Content */}
       <div className="flex flex-row items-center justify-between ml-[288px] px-10 py-5">
@@ -221,9 +190,9 @@ const AllUsers = () => {
               </tr>
             </thead>
             <tbody>
-              {users.length > 0 ? (
+              {Array.isArray(users) && users.length > 0 ? (
                 users.map((user) => (
-                  <UserItem key={user.id} user={user} deleteUser={deleteUser} />
+                  <UserItem key={user.id} user={user} onDeleteClick={handleOpenDeleteModal} />
                 ))
               ) : (
                 <tr>
@@ -276,39 +245,26 @@ const AllUsers = () => {
         )}
       </div> */}
 
-      {/* Profile Section
-      <div className="bg-white rounded-[62px] border border-[#edf1f1] px-3 py-2 flex items-center justify-between w-[256px] absolute left-4 top-[813px] shadow-xs">
-        <div className="flex items-center gap-3">
-          <img src="/assets/images/admin-avatar.png" alt="Admin" className="w-10 h-10 rounded-full" />
-          <div className="flex flex-col">
-            <span className="font-medium text-[#1e293b]">Admin Name</span>
-            <span className="text-xs text-[#64748b]">admin@univ-mosta.dz</span>
-          </div>
-        </div>
-        <button onClick={logout} className="p-1">
-          <img src="/assets/images/icons/logout.png" alt="Logout" className="w-6 h-6" />
-        </button>
-      </div> */}
 
       {/* Delete User Modal */}
-      {/* {showDeleteModal && (
+      {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 max-w-[360px] w-full">
             <h3 className="text-lg font-semibold mb-4">Delete User</h3>
             <div className="mb-6">
               <p>Are you sure you want to delete this user?</p>
-              <p className="mt-2">Name: <span className="font-medium">{selectedUser?.name}</span></p>
-              <p>University ID: <span className="font-medium">{selectedUser?.universityId}</span></p>
+              <p className="mt-2">Name: <span className="font-medium">{selectedUser?.fullName}</span></p>
+              <p>University ID: <span className="font-medium">{selectedUser?.identifier}</span></p>
             </div>
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => setShowDeleteModal(false)}
+                onClick={handleCancelDelete}
                 className="px-4 py-2 bg-[#f1f5f9] text-[#475569] rounded text-sm font-medium hover:bg-[#e2e8f0]"
               >
                 Cancel
               </button>
               <button
-                onClick={confirmDelete}
+                onClick={handleConfirmDelete}
                 className="px-4 py-2 bg-[#25388c] text-white rounded text-sm font-medium hover:bg-[#1e2a6d]"
               >
                 Delete
@@ -316,7 +272,7 @@ const AllUsers = () => {
             </div>
           </div>
         </div>
-      )} */}
+      )}
 
       {/* ID Card Modal */}
       {/* {showIdCardModal && (
