@@ -4,13 +4,8 @@ import bookNotAvailable from '../assets/book-notAvailable.jpg';
 import toast from "react-hot-toast";
 import { Book } from "@mui/icons-material";
 
-export default function BookCard ({ book }) {
-    const [selectedBook, setSelectedBook] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const handleCardClick = (book) => {
-      setSelectedBook(book);
-      setIsModalOpen(true);
-    };
+export default function BookCard ({ book, handleCardClick}) {
+  
      const borrow = async (bookId) => {
         const user = JSON.parse(localStorage.getItem("user"));
         try {
@@ -74,7 +69,6 @@ export default function BookCard ({ book }) {
             Borrow
           </button>
         </div>
-        <BookDetailsModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} book={book}/>
       </div>
     </div>
   </div>

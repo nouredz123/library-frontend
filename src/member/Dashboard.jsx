@@ -16,6 +16,7 @@ import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
 import toast from "react-hot-toast";
 import BookCard from "../components/BookCard";
+import BookDetailsModal from "../components/BookDetailsModal";
 
 export default function Dashboard() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
@@ -23,6 +24,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const handleCardClick = (book) => {
+    setSelectedBook(book);
+    setIsModalOpen(true);
+  };
 
   const navigate = useNavigate();
 
@@ -85,7 +93,7 @@ export default function Dashboard() {
       }
 
       const data = await response.json();
-      setBooks(data._embedded?.bookList || []);
+      setBooks(data.content || []);
       setSelectedDepartment(department);
     } catch (error) {
       console.log(`Error fetching ${department} books:`, error);
@@ -116,7 +124,7 @@ export default function Dashboard() {
   return (
     <div className="flex justify-center w-full bg-[#101624] min-h-screen">
       <div
-    className="w-full max-w-[1440px] bg-[#101624] bg-cover bg-center"
+        className="w-full max-w-[1440px] bg-[#101624] bg-cover bg-center"
         style={{ backgroundImage: "url(/assets/images/EXPORT-BG.png)" }}
       >
         {/* Header with subtle animation */}
@@ -166,7 +174,7 @@ export default function Dashboard() {
 
         {/* Main Content with adjusted spacing */}
         <main
-          className={`max-w-[1160px] mx-auto mt-2 p-5 ${fadeInClass} transition-all duration-700 delay-200`}
+          className={`relative max-w-[1160px] mx-auto mt-2 p-5 ${fadeInClass} transition-all duration-700 delay-200`}
         >
           {selectedDepartment ? (
             // Department Books View with animations
@@ -215,11 +223,10 @@ export default function Dashboard() {
                   {books.map((book, index) => (
                     <div
                       key={book.id}
-                      className={`transform transition-all duration-500 delay-${
-                        index * 100
-                      } animate-fadeIn hover:scale-105`}
+                      className={`transform transition-all duration-500 delay-${index * 100
+                        } animate-fadeIn hover:scale-105`}
                     >
-                      <BookCard book={book} />
+                      <BookCard book={book} handleCardClick={handleCardClick} />
                     </div>
                   ))}
                 </div>
@@ -341,6 +348,11 @@ export default function Dashboard() {
             </div>
           )}
         </main>
+        <BookDetailsModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          book={selectedBook}
+        />
       </div>
     </div>
   );
