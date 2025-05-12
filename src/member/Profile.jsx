@@ -134,13 +134,13 @@ const Profile = () => {
         style={{ backgroundImage: 'url(/assets/images/EXPORT-BG.png)' }}
       >
         {/* Header with subtle animation */}
-        <header className={`flex items-center justify-between w-[1240px] mx-auto py-4 ${fadeInClass} transition-all duration-500`}>
+        <header className={`flex flex-col md:flex-row items-center justify-between w-full max-w-screen-xl mx-auto px-4 py-4 ${fadeInClass} transition-all duration-500`}>
           <div
             className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-300"
             onClick={() => navigate('/member/Dashboard')}
           >
             <div className="w-[60px] h-[56px] animate-pulse">
-              <img src={logo} alt="Logo" className="w-full h-full object-cover" />
+              <img src={logo} alt="Logo" className="w-12 h-12 object-cover" />
             </div>
             <p className="text-2xl font-semibold">
               <span className="text-white">Book</span>
@@ -187,9 +187,9 @@ const Profile = () => {
         </div>
 
         {/* Main Content */}
-        <div className={`max-w-[1160px] mx-auto mt-4 ${fadeInClass} transition-all duration-700 delay-200`}>
+        <div className={`w-full max-w-screen-lg mx-auto mt-4 px-4 ${fadeInClass} transition-all duration-700 delay-200`}>
           {/* Profile Container */}
-          <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Left Column - Student Info */}
             <div className="md:w-1/3 bg-[#121a2e] rounded-lg shadow-lg transform transition-all duration-500 hover:shadow-[0_0_15px_rgba(219,68,2,0.3)] border border-[#232738]">
               <div className="p-6 relative">
@@ -269,32 +269,19 @@ const Profile = () => {
                 </h2>
 
                 {/* Filter tabs */}
-                <div className="flex mb-6 bg-[#1a2238] rounded-lg overflow-hidden">
-                  <button
-                    className={`flex-1 py-3 text-center transition-colors duration-300 ${activeBorrowingTab === 'all' ? 'bg-[#db4402] text-white' : 'text-[#d5dfff] hover:bg-[#232738]'}`}
-                    onClick={() => setActiveBorrowingTab('all')}
-                  >
-                    All ({borrowingStats.all})
-                  </button>
-                  <button
-                    className={`flex-1 py-3 text-center transition-colors duration-300 ${activeBorrowingTab === 'active' ? 'bg-[#db4402] text-white' : 'text-[#d5dfff] hover:bg-[#232738]'}`}
-                    onClick={() => setActiveBorrowingTab('active')}
-                  >
-                    Active ({borrowingStats.active})
-                  </button>
-                  <button
-                    className={`flex-1 py-3 text-center transition-colors duration-300 ${activeBorrowingTab === 'pending' ? 'bg-[#db4402] text-white' : 'text-[#d5dfff] hover:bg-[#232738]'}`}
-                    onClick={() => setActiveBorrowingTab('pending')}
-                  >
-                    Pending ({borrowingStats.pending})
-                  </button>
-                  <button
-                    className={`flex-1 py-3 text-center transition-colors duration-300 ${activeBorrowingTab === 'returned' ? 'bg-[#db4402] text-white' : 'text-[#d5dfff] hover:bg-[#232738]'}`}
-                    onClick={() => setActiveBorrowingTab('returned')}
-                  >
-                    Returned ({borrowingStats.returned})
-                  </button>
+                <div className="flex flex-wrap gap-2 mb-6 bg-[#1a2238] rounded-lg p-2">
+                  {['all', 'active', 'pending', 'returned'].map(tab => (
+                    <button
+                      key={tab}
+                      className={`flex-1 min-w-[120px] py-2 text-center rounded-md transition-colors duration-300 ${activeBorrowingTab === tab ? 'bg-[#db4402] text-white' : 'text-[#d5dfff] hover:bg-[#232738]'
+                        }`}
+                      onClick={() => setActiveBorrowingTab(tab)}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)} ({borrowingStats[tab]})
+                    </button>
+                  ))}
                 </div>
+
 
                 {/* Books list */}
                 <div className="space-y-4 overflow-y-auto pr-2 max-h-[500px] hide-scrollbar">

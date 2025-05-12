@@ -15,37 +15,7 @@ export default function BookDetailsModal({ isOpen, onClose, book }) {
   
     const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
     
-    const borrow = async (bookId, pickupDate, returnDate) => {
-      const user = JSON.parse(localStorage.getItem("user"));
-      console.log("token:", user.token);
-      try {
-        const response = await fetch(`${apiUrl}/api/member/borrow`,{
-          method: 'POST',
-          headers: {
-            'Content-type': 'application/json',
-            'Authorization' : `Bearer ${user.token}`
-          },
-          body: JSON.stringify({
-            bookId,
-            memberId: user.id,
-            pickupDate: pickupDate,
-            returnDate: returnDate
-          })
-        })
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error);
-        }
-        const data = await response.json();
-        toast.success("Borrowings done successfully");
-        console.log("Borrow successful:", data);
-        
-      } catch (error) {
-        toast.error(error.message);
-        console.log("Error:", error.message);
-      }
-      
-    }
+    
   
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -92,7 +62,7 @@ export default function BookDetailsModal({ isOpen, onClose, book }) {
               Borrow Book
             </button>
           </div>
-          <BorrowModal isOpen={isBorrowModalOpen} book={book} onClose={()=>setIsBorrowModalOpen(false)} onBorrow={borrow}/>
+          <BorrowModal isOpen={isBorrowModalOpen} book={book} onClose={()=>setIsBorrowModalOpen(false)}/>
         </div>
       </div>
     </div>

@@ -7,7 +7,9 @@ import toast from 'react-hot-toast';
 import BookCard from '../components/BookCard';
 import Pagination from '../components/Pagination';
 import BookDetailsModal from '../components/BookDetailsModal';
+import BorrowModal from '../components/BorrowModal';
 
+const apiUrl = import.meta.env.VITE_API_URL;
 export default function Search() {
     const [searchQuery, setSearchQuery] = useState('');
     const [books, setBooks] = useState([]);
@@ -16,6 +18,9 @@ export default function Search() {
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [totalBooks, setTotalBooks] = useState(null);
+
+    const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
+    const [borrowModalBook, setBorrowModalBook] = useState(null);
 
     const [selectedBook, setSelectedBook] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -63,6 +68,7 @@ export default function Search() {
         const params = new URLSearchParams();
         params.append("keyword", searchQuery);
         if (available !== "all") params.append("available", available);
+
         params.append("page", currentPage);
         params.append("size", 12);
         params.append("sortBy", sortBy);
@@ -134,10 +140,10 @@ export default function Search() {
         <div className="flex justify-center w-full bg-[#101624] min-h-screen">
             <div className="w-full max-w-[1440px] bg-[#101624] bg-cover bg-center pb-24" style={{ backgroundImage: 'url(/assets/images/EXPORT-BG.png)' }}>
                 {/* Header  */}
-                <header className={`flex items-center justify-between max-w-[1240px] w-full px-4 mx-auto py-4 ${fadeInClass} transition-all duration-500`}>
+                <header className={`flex flex-col md:flex-row items-center justify-between max-w-[1240px] w-full px-4 mx-auto py-4 ${fadeInClass} transition-all duration-500`}>
                     <div className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-300" onClick={() => navigate('/member/Dashboard')}>
                         <div className="w-[60px] h-[56px] animate-pulse">
-                            <img src={logo} alt="Logo" className="w-full h-full object-cover" />
+                           <img src={logo} alt="Logo" className="w-12 h-12 object-cover" />
                         </div>
                         <p className="text-2xl font-semibold">
                             <span className="text-white">Book</span>
@@ -172,7 +178,7 @@ export default function Search() {
                     </div>
 
                     <div className={`flex flex-col justify-center md:flex-row gap-3 mt-6 ${fadeInClass} transition-all duration-700 delay-300 w-full max-w-[90%] md:max-w-[1240px] mx-auto`}>
-                        <div className="relative min-w-[400px]">
+                        <div className="relative w-full md:min-w-[400px]">
                             <input
                                 type="text"
                                 value={searchQuery}
@@ -210,13 +216,13 @@ export default function Search() {
                         </button>
                     </div>
 
-                    <div className={`w-[1240px] mx-auto mt-12 ${fadeInClass} transition-all duration-700 delay-400`}>
+                    <div className={`w-full max-w-[1240px] px-4 mx-auto mt-12 ${fadeInClass} transition-all duration-700 delay-400`}>
                         <div className="flex justify-between items-center bg-[#121a2e] p-4 rounded-t-lg border-b border-[#232738]">
                             <h2 className="text-white text-2xl font-semibold flex items-center">
                                 <Book className="mr-2 text-[#db4402]" />
                                 Search Results
                             </h2>
-                            <div className="flex items-center gap-3 bg-[#232738] px-4 py-2 rounded-lg">
+                            <div className="flex flex-col lg:flex-row items-center gap-3 bg-[#232738] px-4 py-2 rounded-lg">
                                 <FilterList className="text-[#db4402]" />
 
                                 {/* Availability Filter */}
@@ -278,14 +284,14 @@ export default function Search() {
                             )}
 
                             {!loading && books.length > 0 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                                     {books.map((book, index) => (
                                         <div
                                             key={book.id}
                                             className="transform transition-all duration-500 opacity-0 animate-fadeIn"
                                             style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
                                         >
-                                            <BookCard book={book} handleCardClick={handleCardClick} />
+                                            <BookCard book={book} handleCardClick={handleCardClick} openBorrowModal={() => { setIsBorrowModalOpen(true); setBorrowModalBook(book) }} />
                                         </div>
                                     ))}
                                 </div>
@@ -302,6 +308,7 @@ export default function Search() {
                     onClose={() => setIsModalOpen(false)}
                     book={selectedBook}
                 />
+                <BorrowModal isOpen={isBorrowModalOpen} book={borrowModalBook} onClose={() => setIsBorrowModalOpen(false)} />
             </div>
         </div>
     );

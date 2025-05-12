@@ -17,13 +17,18 @@ import logo from "../assets/logo.png";
 import toast from "react-hot-toast";
 import BookCard from "../components/BookCard";
 import BookDetailsModal from "../components/BookDetailsModal";
+import BorrowModal from "../components/BorrowModal";
 
+const apiUrl = import.meta.env.VITE_API_URL;
 export default function Dashboard() {
   const [selectedDepartment, setSelectedDepartment] = useState(null);
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+
+   const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
+   const [borrowModalBook, setBorrowModalBook] = useState(null);
 
   const [selectedBook, setSelectedBook] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,7 +88,7 @@ export default function Dashboard() {
           method: "GET",
           headers: {
             "Content-type": "application/json",
-            Authorization: `Bearer ${user?.token || ""}`,
+            'Authorization': `Bearer ${user?.token || ""}`,
           },
         }
       );
@@ -128,26 +133,21 @@ export default function Dashboard() {
         style={{ backgroundImage: "url(/assets/images/EXPORT-BG.png)" }}
       >
         {/* Header with subtle animation */}
-        <header
-          className={`flex items-center justify-between w-[1240px] mx-auto py-4 ${fadeInClass} transition-all duration-500`}
-        >
+        <header className={`flex flex-wrap items-center justify-between max-w-screen-xl mx-auto px-4 py-4 ${fadeInClass} transition-all duration-500`}>
+
           <div
             className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-300"
             onClick={() => navigate("/member/Dashboard")}
           >
-            <div className="w-[60px] h-[56px] animate-pulse">
-              <img
-                src={logo}
-                alt="Logo"
-                className="w-full h-full object-cover"
-              />
+            <div className="w-12 h-12 md:w-[60px] md:h-[56px] animate-pulse">
+              <img src={logo} alt="Logo" className="w-12 h-12 object-cover" />
             </div>
             <p className="text-2xl font-semibold">
               <span className="text-white">Book</span>
               <span className="text-[#db4402]">FSEI</span>
             </p>
           </div>
-          <nav className="flex items-center gap-8">
+          <nav className="flex flex-wrap items-center gap-6 md:gap-8">
             <div className="text-[#db4402] text-lg font-medium relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#db4402]">
               Home
             </div>
@@ -173,9 +173,7 @@ export default function Dashboard() {
         </header>
 
         {/* Main Content with adjusted spacing */}
-        <main
-          className={`relative max-w-[1160px] mx-auto mt-2 p-5 ${fadeInClass} transition-all duration-700 delay-200`}
-        >
+        <main className={`relative max-w-screen-lg mx-auto mt-2 px-4 py-5 ${fadeInClass} transition-all duration-700 delay-200`}>
           {selectedDepartment ? (
             // Department Books View with animations
             <div className="bg-[#121a2e] rounded-lg p-8 shadow-lg transform transition-all duration-500 animate-fadeIn">
@@ -226,7 +224,7 @@ export default function Dashboard() {
                       className={`transform transition-all duration-500 delay-${index * 100
                         } animate-fadeIn hover:scale-105`}
                     >
-                      <BookCard book={book} handleCardClick={handleCardClick} />
+                      <BookCard book={book} handleCardClick={handleCardClick} openBorrowModal={() => {setIsBorrowModalOpen(true); setBorrowModalBook(book)}}/>
                     </div>
                   ))}
                 </div>
@@ -312,7 +310,7 @@ export default function Dashboard() {
                 <LocalLibrary className="mr-2 text-[#db4402]" />
                 Library Hours & Information
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
                 <div>
                   <h3 className="text-lg font-semibold text-white mb-4">
                     Opening Hours
@@ -353,6 +351,7 @@ export default function Dashboard() {
           onClose={() => setIsModalOpen(false)}
           book={selectedBook}
         />
+        <BorrowModal isOpen={isBorrowModalOpen} book={borrowModalBook} onClose={()=>setIsBorrowModalOpen(false)} />
       </div>
     </div>
   );
