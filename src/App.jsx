@@ -8,9 +8,11 @@ import Profile from './member/Profile';
 import AllUsers from './staff/AllUsers';
 import AllBooks from './staff/AllBooks';
 import SignUp from './auth/sign-up';
+import SignAdmin from './auth/sign-admin'
 import AccountRequests from './staff/AccountRequests';
 import { Toaster } from 'react-hot-toast';
 import Search from './member/Search';
+import BorrowRequests from './staff/BorrowRequests';
 function App() {
   return (
     <>
@@ -19,6 +21,7 @@ function App() {
         <Route path='/' element={<Home />} />
         <Route path='/sign-in' element={<SignIn />} />
         <Route path='/sign-up' element={<SignUp />} />
+        <Route path='/sign-admin' element={<SignAdmin />} />
         <Route path='/member/Dashboard' element={(<Dashboard />)} />
         <Route path='/member/profile' element={(<Profile />)} />
         <Route path='/member/Search' element={(<Search />)} />
@@ -26,6 +29,7 @@ function App() {
         <Route path='/staff/AllUsers' element={(<AllUsers />)} />
         <Route path='/staff/AllBooks' element={(<AllBooks />)} />
         <Route path='/staff/AccountRequests' element={(<AccountRequests />)} />
+        <Route path='/staff/BorrowRequests' element={(<BorrowRequests />)} />
       </Routes>
     </Router>
     <Toaster/>

@@ -11,6 +11,7 @@ import user from '../assets/user.png';
 import logoutImg from '../assets/logout.png';
 import plusBook from '../assets/Plusbook.png';
 import AdminSideBar from '../components/AdminSideBar';
+
 export default function StaffDashboard() {
   // State for selected department and books
   const [insights, setInsights] = useState({});

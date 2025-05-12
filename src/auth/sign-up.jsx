@@ -8,6 +8,7 @@ import noiseBackground from '../assets/Noise.png';
 import exportBg from '../assets/EXPORT-BG.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { Opacity } from '@mui/icons-material';
+import toast from 'react-hot-toast';
 
 const algerianWilayas = [
   "1 - Adrar", "2 - Chlef", "3 - Laghouat", "4 - Oum El Bouaghi", "5 - Batna",
@@ -24,7 +25,9 @@ const algerianWilayas = [
   "56 - Djanet", "57 - El M'Ghair", "58 - El Meniaa"
 ];
 
+const apiUrl = import.meta.env.VITE_API_URL;
 const SignUp = () => {
+
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -37,7 +40,10 @@ const SignUp = () => {
     wilaya: "",
     cardBase64: "",
     cardContentType: ""
-  })
+  });
+  const [errors, setErrors] = useState({
+      email: "",
+    });
   
 
   const togglePassword = () => {
@@ -60,9 +66,14 @@ const SignUp = () => {
   };
   const handleSignUp = () => {
       if (!formData.email || !formData.password || !formData.fullName) {
-        alert("Please fill in both username and password.");
+        toast.error("Please fill in all fields.");
         return;
       }
+      const hasError = Object.values(errors).some(errorMsg => errorMsg);
+        if(hasError){
+          toast.error("Please fix the validation errors before submitting.");
+          return 
+        }
       signup();
     };
 
@@ -79,8 +90,11 @@ const SignUp = () => {
           email: formData.email,
           password: formData.password,
           identifier: formData.identifier,
+          dateOfBirth: formData.dateOfBirth,
+          birthWilaya: formData.wilaya,
           role: "member",
-          cardBase64: formData.cardBase64
+          cardBase64: formData.cardBase64,
+          contentType: formData.cardContentType, 
         })
       });
 
@@ -114,6 +128,31 @@ const SignUp = () => {
       
     }
   }
+
+  const validateEmail = async () => {
+      const user = JSON.parse(localStorage.getItem("user"));
+      try {
+        const response = await fetch(`${apiUrl}/api/auth/validate/email?email=${encodeURIComponent(formData.email)}`,{
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${user?.token || ''}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          console.log(data);
+          if (data === true) {
+            setErrors(prev => ({ ...prev, email: "" }));
+          } else {
+            setErrors(prev => ({ ...prev, email: "email already exists." }));
+          }
+        } else {
+          setErrors(prev => ({ ...prev, email: "Something went wrong." }));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
 
 
@@ -169,10 +208,11 @@ const SignUp = () => {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e)=>{setFormData(prev => ({...prev, email: e.target.value}))}}
+                  onBlur={validateEmail}
                 />
-                {/* {errors.email && (
-                  <span className="text-[#ff4d4d] text-xs mt-1">{"errors.email"}</span>
-                )} */}
+                {errors.email && (
+                  <span className="text-[#ff4d4d] text-xs mt-1">{errors.email}</span>
+                )}
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
@@ -288,12 +328,14 @@ const SignUp = () => {
               <span>&nbsp;</span>
               <Link to="/sign-in" className="font-bold text-[#db4402] hover:text-[#ff5c1b] transition-colors duration-300">Login</Link>
             </div>
+            <div className="w-full text-center text-[#d5dfff] text-base leading-6 mt-2">
+              <span className="font-medium">Are you an admin?</span>
+              <span>&nbsp;</span>
+              <Link to="/sign-admin" className="font-bold text-[#db4402] hover:text-[#ff5c1b] transition-colors duration-300">Register as admin</Link>
+            </div>
           </form>
         </div>
-        <div 
-          className="h-full w-full bg-cover bg-center"
-          style={{ backgroundImage: `url(${backgroundImage})` }}
-        ></div>
+        <img src={backgroundImage}  className="h-full w-full bg-cover bg-center" loading='lazy'/>
       </div>
     </div>
   );
