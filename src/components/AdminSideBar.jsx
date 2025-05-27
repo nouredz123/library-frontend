@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import logo from '../assets/logo.png';
 import home from '../assets/home.png';
 import profile from '../assets/profile-2user.png';
@@ -6,12 +6,43 @@ import book from '../assets/book.png';
 import borrow from '../assets/bookmark-2.png';
 import user from '../assets/user.png';
 import logoutImg from '../assets/logout.png';
-import plusBook from '../assets/Plusbook.png';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+
+const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function AdminSideBar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [userInfo, setUserInfo] = useState({});
+
+  useEffect(()=>{
+    getAdminInfo();
+  }, [])
+
+  const getAdminInfo = async()=>{
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    try {
+      const response = await fetch(`${apiUrl}/api/staff/${user.id}/info`, {
+        method: "GET",
+        headers: {
+          'Content-type': 'application/json',
+          "Authorization": `Bearer ${user?.token || ''}`
+        }
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error("Get info failed:", error);
+      } else {
+        const data = await response.json();
+        setUserInfo(data);
+        console.log("User info fetch successful:", data);
+      }
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  }
 
   const logout = () => {
     localStorage.removeItem("user");
@@ -22,6 +53,7 @@ export default function AdminSideBar() {
       window.history.pushState(null, "", window.location.href);
     };
   };
+  
 
   // Function to check if link is active
   const isActive = (path) => location.pathname === path;
@@ -132,8 +164,8 @@ export default function AdminSideBar() {
       <div className="bg-white rounded-[62px] border border-[#edf1f1] px-3 py-2 flex items-center justify-between shadow-xs">
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
-            <span className="font-medium text-[#1e293b]">admin</span>
-            <span className="text-xs text-[#64748b]">admin@univ-mosta.dz</span>
+            <span className="font-medium text-[#1e293b]">{userInfo.fullName || "admin"}</span>
+            <span className="text-xs text-[#64748b]">{userInfo.email || "admin@univ-mosta.dz"}</span>
           </div>
         </div>
         <button onClick={logout} className="p-1">

@@ -1,40 +1,28 @@
 import React, { useState } from "react";
-import bookNotAvailable from '../assets/book-notAvailable.jpg'
-import { FaRegCircleCheck } from "react-icons/fa6";
-import { FaCalendar } from "react-icons/fa";
-import { PiWarningDiamondBold } from "react-icons/pi";
-import { FaHourglassHalf } from "react-icons/fa6";
 import { FaTimes } from "react-icons/fa";
 import BorrowModal from "./BorrowModal";
-import toast from "react-hot-toast";
+import CoverImage from "./CoverImage";
 
-const apiUrl = import.meta.env.VITE_API_URL;
 
-export default function BookDetailsModal({ isOpen, onClose, book }) {
-    if (!isOpen || !book) return null;
-  
-    const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
-    
-    
-  
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+export default function BookDetailsModal({ isOpen, onClose, book, borrowing = null }) {
+  if (!isOpen || !book) return null;
+
+  const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
+  const [cancel, setCancel] = useState(false);
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-[#1a2238] text-white rounded-lg p-6 max-w-2xl w-full relative flex">
-        
+
         {/* Left side: Book Cover */}
-        <div className="flex-shrink-0">
-          <img
-            src={book?.coverUrl}
-            alt="Book Cover"
-            className="w-58 h-72 object-cover rounded"
-            onError={(e) => e.target.src = bookNotAvailable} 
-          />
+        <div className="flex-shrink-0 w-[232px] h-[288px] bg-gray-800 ">
+          <CoverImage coverUrl={book?.coverUrl} title={book.title}/>
         </div>
 
         {/* Right side: Book Info */}
         <div className="ml-6 flex-1 relative">
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="absolute top-0 right-0 text-white text-2xl leading-none"
           >
             <FaTimes />
@@ -54,18 +42,26 @@ export default function BookDetailsModal({ isOpen, onClose, book }) {
           </div>
 
           {/* Borrow Button */}
-          <div className="mt-6">
+          <div className="mt-6 flex gap-6">
             <button
               onClick={() => setIsBorrowModalOpen(true)}
               className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded"
+              disabled={ borrowing && borrowing?.status != "RETURNED"}
             >
               Borrow Book
             </button>
+            <button
+              onClick={() => {setCancel(true); setIsBorrowModalOpen(true)}}
+              className="bg-red-500 hover:bg-red  -600 text-white font-semibold py-2 px-6 rounded"
+              style={{display: (borrowing && borrowing?.status == "PENDING")|| "none"}}
+              disabled={!borrowing || borrowing?.status != "PENDING" }
+            >
+              Cancel
+            </button>
           </div>
-          <BorrowModal isOpen={isBorrowModalOpen} book={book} onClose={()=>setIsBorrowModalOpen(false)}/>
+          <BorrowModal isOpen={isBorrowModalOpen} book={book} onClose={() => setIsBorrowModalOpen(false)} cancel={cancel} borrowing={borrowing} />
         </div>
       </div>
     </div>
-    );
-  }
-  
+  );
+}

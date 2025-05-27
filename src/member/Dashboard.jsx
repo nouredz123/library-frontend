@@ -27,8 +27,8 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
 
-   const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
-   const [borrowModalBook, setBorrowModalBook] = useState(null);
+  const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
+  const [borrowModalBook, setBorrowModalBook] = useState(null);
 
   const [selectedBook, setSelectedBook] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,7 +48,7 @@ export default function Dashboard() {
     const user = JSON.parse(localStorage.getItem("user"));
     console.log("token:", user.token);
     try {
-      const response = await fetch("http://localhost:8080/api/member/borrow", {
+      const response = await fetch(`${apiUrl}/api/member/borrow`, {
         method: "POST",
         headers: {
           "Content-type": "application/json",
@@ -82,8 +82,7 @@ export default function Dashboard() {
     setError(null);
 
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/member/books?department=${department}`,
+      const response = await fetch(`${apiUrl}/api/member/books?department=${department}`,
         {
           method: "GET",
           headers: {
@@ -98,11 +97,13 @@ export default function Dashboard() {
       }
 
       const data = await response.json();
+      console.log(data);
       setBooks(data.content || []);
       setSelectedDepartment(department);
     } catch (error) {
       console.log(`Error fetching ${department} books:`, error);
       setError(`Failed to load books: ${error.message}`);
+      toast.error("Failed to load books. Please try again later.");
       setBooks([]);
     } finally {
       setLoading(false);
@@ -173,7 +174,7 @@ export default function Dashboard() {
         </header>
 
         {/* Main Content with adjusted spacing */}
-        <main className={`relative max-w-screen-lg mx-auto mt-2 px-4 py-5 ${fadeInClass} transition-all duration-700 delay-200`}>
+        <main className={`relative max-w-screen-xl mx-auto mt-2 px-4 py-5 ${fadeInClass} transition-all duration-700 delay-200`}>
           {selectedDepartment ? (
             // Department Books View with animations
             <div className="bg-[#121a2e] rounded-lg p-8 shadow-lg transform transition-all duration-500 animate-fadeIn">
@@ -224,7 +225,7 @@ export default function Dashboard() {
                       className={`transform transition-all duration-500 delay-${index * 100
                         } animate-fadeIn hover:scale-105`}
                     >
-                      <BookCard book={book} handleCardClick={handleCardClick} openBorrowModal={() => {setIsBorrowModalOpen(true); setBorrowModalBook(book)}}/>
+                      <BookCard book={book} handleCardClick={handleCardClick} openBorrowModal={() => { setIsBorrowModalOpen(true); setBorrowModalBook(book) }} />
                     </div>
                   ))}
                 </div>
@@ -351,7 +352,7 @@ export default function Dashboard() {
           onClose={() => setIsModalOpen(false)}
           book={selectedBook}
         />
-        <BorrowModal isOpen={isBorrowModalOpen} book={borrowModalBook} onClose={()=>setIsBorrowModalOpen(false)} />
+        <BorrowModal isOpen={isBorrowModalOpen} book={borrowModalBook} onClose={() => setIsBorrowModalOpen(false)} />
       </div>
     </div>
   );

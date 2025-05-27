@@ -1,20 +1,12 @@
-import { useState } from "react";
-import bookNotAvailable from '../assets/book-notAvailable.jpg';
-import toast from "react-hot-toast";
-import { Book } from "@mui/icons-material";
+
+import CoverImage from "./CoverImage";
 
 export default function BookCard ({ book, handleCardClick, openBorrowModal}) {
 
     return (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition">
     <div className="h-48 bg-gray-700 flex items-center justify-center">
-      {book.coverUrl ? (
-        <img src={book.coverUrl} alt={book.title} className="h-full object-cover" 
-          onError={(e) => e.target.src = bookNotAvailable} 
-        />
-      ) : (
-        <Book size={64} className="text-gray-500" />
-      )}
+      <CoverImage coverUrl={book?.coverUrl} title={book.title}/>
     </div>
     <div className="p-4">
       <h3 className="text-lg font-bold truncate text-white">{book.title}</h3>

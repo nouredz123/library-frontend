@@ -1,21 +1,14 @@
 import React from 'react'
-import bookNotAvailable from '../assets/book-notAvailable.jpg'
+import CoverImage from './CoverImage'
 
 export default function BookItem({ book, deleteBook }) {
-  console.log(book);
 
   return (
     <tr className="hover:bg-[#f8fafc]">
       {/* Book Details */}
       <td className="p-2">
         <div className="flex items-center gap-4">
-          <img 
-            src={book.coverUrl} 
-            alt="Book Cover" 
-            loading='lazy'
-            className="w-12 h-16 object-cover rounded bg-black" 
-            onError={(e) => e.target.src = bookNotAvailable}
-          />
+          <CoverImage coverUrl={book?.coverUrl} title={book.title}/>
           <div>
             <p className="font-medium text-[#1e293b]">{book.title}</p>
             <p className="text-sm text-[#64748b]">{book.author}</p>

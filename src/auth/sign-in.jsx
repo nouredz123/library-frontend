@@ -8,6 +8,8 @@ import noiseBackground from '../assets/Noise.png';
 import exportBg from '../assets/EXPORT-BG.png';
 import toast from 'react-hot-toast';
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 export default function SignIn() {
   const [formData, setFormData] = useState({
     email: "",
@@ -18,7 +20,7 @@ export default function SignIn() {
   const passwordRef = useRef(null);
 
   useEffect(() => {
-    document.getElementById('emailInput')?.focus();
+    document.getElementById('email')?.focus();
   }, []);
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export default function SignIn() {
 
   const login = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/login', {
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -57,6 +59,7 @@ export default function SignIn() {
 
       if (!response.ok) {
         const data = await response.json();
+        toast.error(data.error);
         throw new Error(data.error);
       }
 
@@ -77,7 +80,8 @@ export default function SignIn() {
       }
 
     } catch (error) {
-      toast.error("Somthing went wrong, please try again later.");
+      //toast.error("Somthing went wrong, please try again later.");
+      toast.error(error.message);
       console.error("Error:", error.message);
     }
   };

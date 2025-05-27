@@ -75,7 +75,7 @@ export default function Search() {
         params.append("direction", sortDirection);
 
         try {
-            const response = await fetch(`http://localhost:8080/api/member/books/search?${params.toString()}`, {
+            const response = await fetch(`${apiUrl}/api/member/books?${params.toString()}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${user.token}`
@@ -140,10 +140,10 @@ export default function Search() {
         <div className="flex justify-center w-full bg-[#101624] min-h-screen">
             <div className="w-full max-w-[1440px] bg-[#101624] bg-cover bg-center pb-24" style={{ backgroundImage: 'url(/assets/images/EXPORT-BG.png)' }}>
                 {/* Header  */}
-                <header className={`flex flex-col md:flex-row items-center justify-between max-w-[1240px] w-full px-4 mx-auto py-4 ${fadeInClass} transition-all duration-500`}>
+                <header className={`flex flex-col md:flex-row items-center justify-between max-w-screen-xl w-full px-4 mx-auto py-4 ${fadeInClass} transition-all duration-500`}>
                     <div className="flex items-center gap-2 cursor-pointer hover:scale-105 transition-transform duration-300" onClick={() => navigate('/member/Dashboard')}>
                         <div className="w-[60px] h-[56px] animate-pulse">
-                           <img src={logo} alt="Logo" className="w-12 h-12 object-cover" />
+                            <img src={logo} alt="Logo" className="w-12 h-12 object-cover" />
                         </div>
                         <p className="text-2xl font-semibold">
                             <span className="text-white">Book</span>
@@ -177,7 +177,7 @@ export default function Search() {
                         </p>
                     </div>
 
-                    <div className={`flex flex-col justify-center md:flex-row gap-3 mt-6 ${fadeInClass} transition-all duration-700 delay-300 w-full max-w-[90%] md:max-w-[1240px] mx-auto`}>
+                    <div className={`flex flex-col justify-center md:flex-row gap-3 mt-6 ${fadeInClass} transition-all duration-700 delay-300 w-full max-w-screen-md mx-auto`}>
                         <div className="relative w-full md:min-w-[400px]">
                             <input
                                 type="text"
@@ -209,14 +209,14 @@ export default function Search() {
                         </select>
                         <button
                             onClick={handleSearch}
-                            className="px-3 py-0.5 bg-[#db4402] text-[#d5dfff] rounded-lg hover:bg-[#e45617] transition-colors duration-300 flex items-center gap-2 group"
+                            className="px-3 py-0.5 bg-[#db4402] text-[#d5dfff] rounded-lg hover:bg-[#e45617] transition-colors duration-300 flex items-center gap-2 group justify-center"
                         >
                             Search
                             <ChevronRight className="group-hover:translate-x-1 transition-transform duration-300" />
                         </button>
                     </div>
 
-                    <div className={`w-full max-w-[1240px] px-4 mx-auto mt-12 ${fadeInClass} transition-all duration-700 delay-400`}>
+                    <div className={`w-full max-w-screen-xl px-4 mx-auto mt-12 ${fadeInClass} transition-all duration-700 delay-400`}>
                         <div className="flex justify-between items-center bg-[#121a2e] p-4 rounded-t-lg border-b border-[#232738]">
                             <h2 className="text-white text-2xl font-semibold flex items-center">
                                 <Book className="mr-2 text-[#db4402]" />
@@ -307,6 +307,7 @@ export default function Search() {
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     book={selectedBook}
+                    borrowing={null}
                 />
                 <BorrowModal isOpen={isBorrowModalOpen} book={borrowModalBook} onClose={() => setIsBorrowModalOpen(false)} />
             </div>

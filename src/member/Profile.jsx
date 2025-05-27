@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Person,
   Email,
   Badge,
@@ -12,8 +11,6 @@ import {
 } from "@mui/icons-material";
 import logoutImg from '../assets/logout.png';
 import logo from '../assets/logo.png';
-import frame from '../assets/frame 165.png';
-import bookNotAvailable from '../assets/book-notAvailable.jpg';
 import BookDetailsModal from "../components/BookDetailsModal";
 import { FaRegCircleCheck } from "react-icons/fa6";
 import { FaCalendar } from "react-icons/fa";
@@ -28,6 +25,7 @@ const Profile = () => {
   const [userInfo, setUserInfo] = useState({});
   const [borrowings, setBorrowings] = useState([]);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [selectedBorrowing, setSelectedBorrowing] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
   const [activeBorrowingTab, setActiveBorrowingTab] = useState("all"); // "all", "active", "returned", "pending"
@@ -41,7 +39,7 @@ const Profile = () => {
     setIsPageLoaded(true);
     fetchMemberInfo();
     fetchBorrowings();
-  }, []);
+  }, [isModalOpen]);
 
   const fetchMemberInfo = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -72,7 +70,7 @@ const Profile = () => {
     const user = JSON.parse(localStorage.getItem("user"));
 
     try {
-      const response = await fetch(`${apiUrl}/api/member/${user?.id}/borrowings`, {
+      const response = await fetch(`${apiUrl}/api/member/${user?.id}/borrowings?paged=false`, {
         method: "GET",
         headers: {
           'Content-type': 'application/json',
@@ -85,7 +83,7 @@ const Profile = () => {
         console.error("Get borrowings failed:", error);
       } else {
         const data = await response.json();
-        setBorrowings(data);
+        setBorrowings(data.content);
         console.log("Borrowings fetch successful:", data);
       }
     } catch (error) {
@@ -93,8 +91,9 @@ const Profile = () => {
     }
   };
 
-  const handleCardClick = (book) => {
-    setSelectedBook(book);
+  const handleCardClick = (borrowing) => {
+    setSelectedBook(borrowing?.bookCopy?.book);
+    setSelectedBorrowing(borrowing);
     setIsModalOpen(true);
   };
 
@@ -187,7 +186,7 @@ const Profile = () => {
         </div>
 
         {/* Main Content */}
-        <div className={`w-full max-w-screen-lg mx-auto mt-4 px-4 ${fadeInClass} transition-all duration-700 delay-200`}>
+        <div className={`w-full max-w-screen-xl mx-auto mt-4 px-4 ${fadeInClass} transition-all duration-700 delay-200`}>
           {/* Profile Container */}
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Left Column - Student Info */}
@@ -290,16 +289,11 @@ const Profile = () => {
                       <div
                         key={index}
                         className="flex bg-[#1a2238] rounded-lg overflow-hidden border border-[#232738] hover:border-[#db4402] transition-all duration-300 hover:shadow-md cursor-pointer transform hover:scale-[1.01] opacity-0 animate-fadeIn"
-                        onClick={() => handleCardClick(borrowing?.bookCopy?.book)}
+                        onClick={() => handleCardClick(borrowing)}
                         style={{ animationDelay: `${index * 100}ms` }}
                       >
                         <div className="w-24 h-32 bg-[#232738] flex-shrink-0">
-                          <img
-                            src={borrowing?.bookCopy?.book?.coverUrl || '/assets/images/book.png'}
-                            alt="Book Cover"
-                            className="w-full h-full object-cover"
-                            onError={(e) => e.target.src = bookNotAvailable}
-                          />
+                          <CoverImage coverUrl={borrowing?.bookCopy?.book?.coverUrl} title={borrowing?.bookCopy?.book.title} />
                         </div>
 
                         <div className="flex-1 p-4">
@@ -309,7 +303,7 @@ const Profile = () => {
                             </h3>
 
                             <div className={
-                              borrowing.status === "RETURNED"
+                              borrowing?.status === "RETURNED"
                                 ? "text-[#4caf50] flex items-center gap-1"
                                 : borrowing.status === "PICKED_UP"
                                   ? borrowing.returnDate && new Date(borrowing.returnDate) < new Date()
@@ -319,11 +313,11 @@ const Profile = () => {
                                     ? "text-amber-300 flex items-center gap-1"
                                     : "text-white flex items-center gap-1"
                             }>
-                              {borrowing.status === "RETURNED"
+                              {borrowing?.status === "RETURNED"
                                 ? <><FaRegCircleCheck size={16} /> <span>Returned</span></>
-                                : borrowing.status === "OVERDUE"
+                                : borrowing?.status === "OVERDUE"
                                   ? <><PiWarningDiamondBold size={16} /> <span>Overdue</span></>
-                                  : borrowing.status === "PICKED_UP"
+                                  : borrowing?.status === "PICKED_UP"
                                     ? <><FaCalendar size={16} /> <span>{Math.ceil(
                                       (new Date(borrowing.returnDate) - new Date()) / (1000 * 60 * 60 * 24)
                                     )} day(s) left</span></>
@@ -345,7 +339,7 @@ const Profile = () => {
 
                             <div className="flex items-center text-[#d5dfff]">
                               <EventNote className="mr-1 text-[#db4402]" fontSize="small" />
-                              <span>Return: {borrowing?.returnDate ? new Date(borrowing.returnDate).toLocaleDateString() : 'Not set'}</span>
+                              <span>Return: {borrowing?.returnDate ? new Date(borrowing?.returnDate).toLocaleDateString() : 'Not set'}</span>
                             </div>
                           </div>
                         </div>
@@ -370,12 +364,12 @@ const Profile = () => {
             </div>
           </div>
         </div>
-
         {/* Book Details Modal */}
         <BookDetailsModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           book={selectedBook}
+          borrowing={selectedBorrowing}
         />
       </div>
     </div>

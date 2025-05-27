@@ -1,218 +1,348 @@
-import { ArrowLeft, Book, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { departments } from '../constants';
-import logo from '../assets/logo.png';
-import home from '../assets/home.png';
-import profile from '../assets/profile-2user.png';
-import book from '../assets/book.png';
-import borrow from '../assets/bookmark-2.png';
-import user from '../assets/user.png';
-import logoutImg from '../assets/logout.png';
-import plusBook from '../assets/Plusbook.png';
+import { useNavigate } from 'react-router-dom';
+import { MenuBook, PersonAdd, CalendarToday, Add, ChevronRight, People, Bookmark } from '@mui/icons-material';
+import StateCard from '../components/StateCard';
 import AdminSideBar from '../components/AdminSideBar';
+import CoverImage from '../components/CoverImage';
+
+const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function StaffDashboard() {
-  // State for selected department and books
-  const [insights, setInsights] = useState({});
-   const navigate = useNavigate();
-   useEffect(()=>{
-    fetchInsights();
-   },[]);
+  const [insights, setInsights] = useState({
+    pendingAccountRequests: 0,
+    activeBorrowings: 0,
+    availableBooks: 0,
+    activeUsers: 0,
+  });
+  const [recentBooks, setRecentBooks] = useState([]);
+  const [recentRequests, setRecentRequests] = useState([]);
+  const [recentAccountRequests, setRecentAccountRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState({});
+  const navigate = useNavigate();
 
-  const fetchInsights = async() => {
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    setUser(storedUser);
+    fetchInsights();
+    fetchRecentBooks();
+    fetchRecentRequests();
+    fetchRecentAccountRequests();
+  }, []);
+
+  const fetchInsights = async () => {
+    setIsLoading(true);
     const user = JSON.parse(localStorage.getItem("user"));
     try {
-      const response = await fetch(`http://localhost:8080/api/staff/insights`, {
+      const response = await fetch(`${apiUrl}/api/staff/insights`, {
         method: "GET",
         headers: {
           'Content-type': 'application/json',
           "Authorization": `Bearer ${user?.token || ''}`
         }
       });
-      
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch  insights`);
+        throw new Error(`Failed to fetch insights`);
       }
-      
+
       const data = await response.json();
-      console.log(data);
       setInsights(data);
-      
     } catch (error) {
       console.log(`Error fetching insights:`, error);
-      
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const fetchRecentBooks = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    let sortBy = "addedDate";
+    let direction = "desc";
+    const params = new URLSearchParams();
+    params.append("page", 0);
+    params.append("size", 3)
+    params.append("sortBy", sortBy);
+    params.append("direction", direction);
+
+    try {
+      console.log(`${apiUrl}/api/staff/books?${params.toString()}`);
+      const response = await fetch(`${apiUrl}/api/staff/books?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${user?.token || ''}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch books`);
+      }
+      const data = await response.json();
+      console.log(data);
+      setRecentBooks(data.content);
+    } catch (error) {
+      console.log(`Error fetching books:`, error);
+    }
+  }
+
+  const fetchRecentRequests = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    let sortBy = "addedDate";
+    let direction = "asc";
+
+    const params = new URLSearchParams();
+    params.append("status", "PENDING");
+    params.append("page", 0);
+    params.append("size", 10);
+    params.append("sortBy", sortBy);
+    params.append("direction", direction);
+
+    try {
+      const response = await fetch(`${apiUrl}/api/staff/borrowings?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          'Content-type': 'application/json',
+          "Authorization": `Bearer ${user?.token || ''}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        console.log(data);
+        setRecentRequests([]);
+        throw new Error(`Failed to fetch requests`);
+      }
+
+      const data = await response.json();
+      console.log("borrowings: ", data);
+      setRecentRequests(data.content);
+
+    } catch (error) {
+      console.log(`Error fetching requests:`, error);
+    }
+  }
+
+  const fetchRecentAccountRequests = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    const params = new URLSearchParams();
+    params.append("status", "PENDING");
+    params.append("page", 0);
+    params.append("size", 3);
+    params.append("sortBy", "joinDate");
+    params.append("direction", "desc");
+
+    try {
+      const response = await fetch(`${apiUrl}/api/staff/accountRequests?${params.toString()}`, {
+        method: "GET",
+        headers: {
+          'Content-type': 'application/json',
+          "Authorization": `Bearer ${user?.token || ''}`
+        }
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (data.error) {
+          setRequests([]);
+          throw new Error(data.error);
+        }
+        throw new Error(`Failed to fetch requests`);
+      }
+
+      console.log(data);
+      setRecentAccountRequests(data.content);
+
+    } catch (error) {
+      console.log(`Error fetching requests:`, error);
     }
   }
 
   const viewAll = (type) => {
-    switch(type) {
+    switch (type) {
       case 'borrow':
-        navigate('/admin/booksreq/borrow-requests');
+        navigate('/staff/borrowrequests');
         break;
       case 'books':
-        navigate('/admin/allbooks/all-books');
+        navigate('/staff/AllBooks');
         break;
       case 'accounts':
-        navigate('/admin/accountsreq/account-requests');
+        navigate('/staff/accountRequests');
         break;
       default:
         break;
     }
   };
 
- 
 
 
   return (
-    <div className="bg-[#f8f8ff] rounded-2xl relative min-h-screen overflow-y-auto">
-      {/* Sidebar */}
+    <div className="bg-[#f8f8ff] min-h-screen">
       <AdminSideBar />
 
-    {/* Main Content */}
-    <div className="flex flex-row items-center justify-between ml-[288px] px-10 py-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-[#1e293b] mb-1">Welcome, Admin</h1>
-        <p className="text-[#64748b] text-sm">Monitor all of your projects and tasks here</p>
-      </div>
-    </div>
-    <div className='ml-[288px]'>
-      {/* Stats Cards */}
-      <div className=" flex flex-row gap-4 items-center justify-start mx-10 my-5 ">
-        <div className="bg-white rounded-xl border border-[#edf1f1] p-4 flex flex-col gap-5 items-start justify-start flex-1 relative">
-          <div className="flex flex-row gap-2.5 items-start justify-start">
-            <div className="text-[#64748b] text-left font-medium text-base truncate">Pending Account Requests</div>
-          </div>
-          <div className="text-[#1e293b] text-left font-semibold text-[28px] leading-8">{insights.pendingAccountRequests}</div>
+      {/* Main Content */}
+      <div className="ml-[288px] px-10 py-5">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold text-[#1e293b] mb-1">Hello, Admin</h1>
+          <p className="text-[#64748b] text-sm">Main control panel for monitoring and managing the library</p>
         </div>
 
-        <div className="bg-white rounded-xl border border-[#edf1f1] p-4 flex flex-col gap-5 items-start justify-start flex-1 relative">
-          <div className="flex flex-row gap-2.5 items-start justify-start">
-            <div className="text-[#64748b] text-left font-medium text-base truncate">Active Borrowings {"(Not returned)"}</div>
-          </div>
-          <div className="text-[#1e293b] text-left font-semibold text-[28px] leading-8">{insights.activeBorrowings}</div>
+        {/* Analytics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StateCard
+            title="Pending Account Requests"
+            value={insights.pendingAccountRequests}
+            icon={<PersonAdd style={{ color: '#4f46e5' }} />}
+            bgColor="bg-indigo-100"
+            isLoading={isLoading}
+          />
+          <StateCard
+            title="Active Borrowings"
+            value={insights.activeBorrowings}
+            icon={<Bookmark style={{ color: '#059669' }} />}
+            bgColor="bg-emerald-100"
+            isLoading={isLoading}
+          />
+          <StateCard
+            title="Available Books"
+            value={insights.availableBooks}
+            icon={<MenuBook style={{ color: '#2563eb' }} />}
+            bgColor="bg-blue-100"
+            isLoading={isLoading}
+          />
+          <StateCard
+            title="Active Users"
+            value={insights.activeUsers}
+            icon={<People style={{ color: '#d97706' }} />}
+            bgColor="bg-amber-100"
+            isLoading={isLoading}
+          />
         </div>
 
-        
+        {/* Borrow Requests */}
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold text-[#1e293b]">Borrow Requests</h2>
+            <button
+              onClick={() => viewAll('borrow')}
+              className="text-sm font-medium text-[#25388c] hover:text-indigo-800 flex items-center"
+            >
+              View All <ChevronRight fontSize="small" />
+            </button>
+          </div>
 
-        <div className="bg-white rounded-xl border border-[#edf1f1] p-4 flex flex-col gap-5 items-start justify-start flex-1 relative">
-          <div className="flex flex-row gap-2.5 items-start justify-start">
-            <div className="text-[#64748b] text-left font-medium text-base truncate">Available Books</div>
-          </div>
-          <div className="text-[#1e293b] text-left font-semibold text-[28px] leading-8">{insights.availableBooks}</div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-[#edf1f1] p-4 flex flex-col gap-5 items-start justify-start flex-1 relative">
-          <div className="flex flex-row gap-2.5 items-start justify-start">
-            <div className="text-[#64748b] text-left font-medium text-base truncate">Active Users {"(Last 30days)"}</div>
-          </div>
-          <div className="text-[#1e293b] text-left font-semibold text-[28px] leading-8">{insights.activeUsers}</div>
-        </div>
-      </div>
-
-      {/* Borrow Requests */}
-      <div className="bg-white rounded-2xl p-4 flex flex-col gap-3.5 items-start justify-start mx-10 my-5 ">
-        <div className="flex flex-row items-center justify-between w-full">
-          <div className="text-[#1e293b] text-left font-semibold text-xl leading-[26px]">Borrow Requests</div>
-          <div className="bg-[#f8f8ff] rounded-md px-3 py-2 flex flex-row gap-1 items-center justify-center h-9">
-            <div className="text-[#25388c] text-left font-semibold text-sm cursor-pointer" onClick={() => viewAll('borrow')}>View all</div>
-          </div>
-        </div>
-        <div className="bg-gradient-to-b from-transparent to-white w-[540px] h-[70px] absolute left-1/2 -translate-x-1/2 bottom-0"></div>
-        <div className="w-[508px] h-[252px] relative overflow-hidden">
-          <div className="flex flex-col gap-1.5 items-center justify-start absolute left-1/2 -translate-x-1/2 bottom-0">
-            <div className="text-[#1e293b] text-left font-semibold text-base leading-[130%]">No Pending Book Requests</div>
-            <div className="text-[#64748b] text-left font-normal text-sm leading-[180%] truncate">
-              There are no borrow book requests awaiting your review at this time.
-            </div>
-          </div>
-          <div className="w-[193px] h-[144px] absolute left-1/2 -translate-x-1/2 top-9">
-            <div className="bg-[#f8fbff] rounded-full w-[144px] h-[144px] absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-1/2"></div>
-            <div className="bg-white rounded-md border border-[#f8fbff] border-opacity-50 w-[158px] h-[68px] absolute left-1/2 -translate-x-1/2 top-[38px] shadow-xs"></div>
-            <div className="w-[66px] h-[90px] relative">
-              <div className="bg-white rounded-lg border border-[#f8fbff] border-opacity-50 w-[66px] h-[90px] absolute left-[calc(50%-68.5px)] top-[27px] shadow-lg"></div>
-              <div className="bg-[#eaf2ff] rounded-md border border-[#f8fbff] w-[54px] h-[54px] absolute left-[calc(50%-62.5px)] top-[33px]"></div>
-              <div className="flex flex-col gap-1 items-center justify-start w-[54px] absolute left-[34px] top-[93px]">
-                <div className="bg-[#e2ecff] rounded-md w-full h-1.5"></div>
-                <div className="bg-[#eaf2ff] rounded-md border border-[#f8fbff] w-[39px] h-1.5"></div>
-              </div>
-            </div>
-            <div className="w-[66px] h-[90px] relative">
-              <div className="bg-white rounded-lg border border-[#f8fbff] border-opacity-50 w-[66px] h-[90px] absolute left-[calc(50%-1.5px)] top-[27px] shadow-lg"></div>
-              <div className="bg-[#eaf2ff] rounded-md border border-[#f8fbff] w-[54px] h-[54px] absolute left-[calc(50%+7.5px)] top-[33px]"></div>
-              <div className="flex flex-col gap-1 items-center justify-start w-[54px] absolute left-[104px] top-[93px]">
-                <div className="bg-[#e2ecff] rounded-md w-full h-1.5"></div>
-                <div className="bg-[#eaf2ff] rounded-md border border-[#f8fbff] w-[39px] h-1.5"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Recently Added Books */}
-      <div className="bg-white rounded-2xl p-4 flex flex-col gap-3.5 items-start justify-start w-[450px] h-[670px] absolute left-[800px] top-[240px] overflow-hidden">
-        <div className="flex flex-row items-center justify-between w-full">
-          <div className="text-[#1e293b] text-left font-semibold text-xl leading-[26px]">Recently Added Books</div>
-          <div className="bg-[#f8f8ff] rounded-md px-3 py-2 flex flex-row gap-1 items-center justify-center h-9">
-            <div className="text-[#25388c] text-left font-semibold text-sm cursor-pointer" onClick={() => viewAll('books')}>View all</div>
-          </div>
-        </div>
-        <div className="flex flex-col gap-[30px] items-start justify-start w-full h-[680px] relative overflow-hidden">
-          <div className="flex flex-row gap-2.5 items-start justify-start w-full relative">
-            <div className="bg-[#f8f8ff] rounded-[10px] border border-[#f8f8ff] px-4 py-3.5 flex flex-row gap-3.5 items-center justify-start flex-1 shadow-xs">
-              <div className="bg-white rounded-full border border-dashed border-white p-3 flex flex-row gap-2 items-start justify-start overflow-hidden">
-                <img src="plus0.svg" alt="Plus" className="w-6 h-6" />
-              </div>
-              <div className="text-[#1e293b] text-left font-medium text-lg tracking-tight">Add New Book</div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-[30px] items-start justify-start w-full overflow-hidden">
-            {/* Book Cards */}
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div key={item} className="flex flex-row gap-3 items-center justify-start w-full">
-                <img 
-                  src={`../../asssets/images/rectangle-24904${item-1}.png`} 
-                  alt="Book Cover" 
-                  className="w-[48.3px] h-[66.27px] object-cover" 
-                />
-                <div className="flex flex-col justify-between h-[76px] flex-1">
-                  <div className="flex flex-col gap-0.5 items-start justify-start w-full">
-                    <div className="text-[#1e293b] text-left font-semibold text-base leading-[130%] truncate">
-                      {item % 3 === 0 ? "Jayne Castle - People in Glass Houses" : 
-                       item % 2 === 0 ? "Inside Evil: Inside Evil Series, Book 1" : 
-                       "The Great Reclamation: A Novel by Rachel Heng"}
+          {
+            recentRequests.length > 0 ? (
+              <div className="border rounded-lg divide-y">
+                {recentRequests.map((req, index) => (
+                  <div key={req} className="flex items-center justify-between p-4 hover:bg-gray-50">
+                    <div className="flex items-center">
+                      <div className="ml-3">
+                        <p className="font-medium text-[#1e293b]">{req.member.fullName}</p>
+                        <p className="text-sm text-[#64748b]">{req.bookCopy.inventoryNumber}</p>
+                      </div>
                     </div>
-                    <div className="flex flex-row gap-2 items-center justify-start">
-                      <div className="text-[#64748b] text-left font-normal text-sm leading-[180%]">By Rachel Heng</div>
-                      <div className="bg-[#8c8e98] rounded-full w-1 h-1"></div>
-                      <div className="text-[#64748b] text-left font-normal text-sm leading-[14px]">Strategic, Fantasy</div>
+                    <button className="px-3 py-2 bg-[#e0e7ff] text-[#4338ca] rounded text-sm hover:bg-[#c7d2fe]">
+                      Mark as Picked up
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="bg-gray-100 p-6 rounded-full mb-4">
+                  <Bookmark style={{ color: '#9ca3af', fontSize: 32 }} />
+                </div>
+                <h3 className="text-[#1e293b] font-medium mb-2">No Pending Borrow Requests</h3>
+                <p className="text-[#64748b] max-w-md">There are no book borrowing requests awaiting your review at this time.</p>
+              </div>
+            )
+          }
+        </div>
+
+        {/* Recently Added Books */}
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold text-[#1e293b]">Recently Added Books</h2>
+            <button
+              onClick={() => viewAll('books')}
+              className="text-sm font-medium text-[#25388c] hover:text-indigo-800 flex items-center"
+            >
+              View All <ChevronRight fontSize="small" />
+            </button>
+          </div>
+
+          <div className={`${recentBooks.length > 0 ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "flex gap-16"} min-h-48`}>
+            {/* Add Book Card */}
+            <div
+              onClick={() => navigate('/staff/AllBooks', { state: { mode: "add" } })}
+              className="border border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-gray-50 transition-all duration-300"
+            >
+              <div className="bg-gray-100 p-3 rounded-full mb-3">
+                <Add style={{ color: '#6b7280', fontSize: 24 }} />
+              </div>
+              <h3 className="font-medium text-[#1e293b]">Add New Book</h3>
+              <p className="text-sm text-[#64748b] mt-1">Click to add a new book to the library</p>
+            </div>
+
+            {recentBooks.length > 0 ? (
+              recentBooks.map((book) => (
+                <div key={book.id} className="border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-all duration-300">
+                  <div className="h-44 bg-gray-200 flex items-center justify-center">
+                    <CoverImage coverUrl={book?.coverUrl} title={book.title} />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-medium text-[#1e293b] mb-1 line-clamp-1">{book.title}</h3>
+                    <p className="text-sm text-[#64748b] mb-2">{book.author}</p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium bg-blue-100 text-blue-600 px-2 py-1 rounded-full">{book.department.split(',')[0]}</span>
+                      <div className="flex items-center text-xs text-[#64748b]">
+                        <CalendarToday style={{ fontSize: 12, marginRight: 4 }} />
+                        {book.addedDate}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-row gap-0.5 items-center justify-start">
-                    <div className="w-4 h-4 relative">
-                      <img src={`vuesax-linear-calendar${item*2-1}.svg`} alt="Calendar" className="absolute left-0 top-0" />
-                    </div>
-                    <div className="text-[#3a354e] text-left font-normal text-xs leading-[180%]">12/01/24</div>
+                </div>
+              ))
+            ) : (
+              <div className="flex  items-center justify-center py-12 text-center">
+                <h3 className="text-[#1e293b] font-medium mb-2">There are no recently added books</h3>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Account Requests */}
+        <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-semibold text-[#1e293b]">Account Requests</h2>
+            <button
+              onClick={() => viewAll('accounts')}
+              className="text-sm font-medium text-[#25388c] hover:text-indigo-800 flex items-center"
+            >
+              View All <ChevronRight fontSize="small" />
+            </button>
+          </div>
+
+          {/* Account requests list - with consistent styling */}
+          <div className="border rounded-lg divide-y">
+            {recentAccountRequests.map((item, index) => (
+              <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-50">
+                <div className="flex items-center">
+                  <div className="ml-3">
+                    <p className="font-medium text-[#1e293b]">{item.fullName}</p>
+                    <p className="text-sm text-[#64748b]">{item.email}</p>
                   </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button className="px-3 py-1.5 bg-[#25388c] text-white rounded-lg text-xs font-medium hover:bg-[#1e2a6d] transition flex items-center"
+                    onClick={() => navigate('/staff/accountRequests')}
+                  >
+                    Review
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
-        <div className="bg-gradient-to-b from-transparent to-white w-full h-[70px] absolute left-1/2 -translate-x-1/2 bottom-0"></div>
-      </div>
-
-      {/* Account Requests */}
-      <div className="bg-white rounded-2xl p-4 flex flex-col gap-3.5 items-start justify-start w-[470px] h-[350px] absolute left-[310px] top-[560px] overflow-hidden">
-        <div className="flex flex-row items-center justify-between w-full">
-          <div className="text-[#1e293b] text-left font-semibold text-xl leading-[26px]">Account Requests</div>
-          <div className="bg-[#f8f8ff] rounded-md px-3 py-2 flex flex-row gap-1 items-center justify-center h-9">
-            <div className="text-[#25388c] text-left font-semibold text-sm cursor-pointer" onClick={() => viewAll('accounts')}>View all</div>
-          </div>
-        </div>
-        <div className="bg-gradient-to-b from-transparent to-white w-full h-[70px] absolute left-1/2 -translate-x-1/2 bottom-0"></div>
       </div>
     </div>
-  </div>
   );
 }

@@ -8,6 +8,8 @@ import exportBg from '../assets/EXPORT-BG.png';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 const SignAdmin = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +33,7 @@ const SignAdmin = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register-admin', {
+      const response = await fetch(`${apiUrl}/api/auth/register-admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -41,18 +43,22 @@ const SignAdmin = () => {
           email: formData.email,
           password: formData.password,
           adminCode: formData.adminCode,
-          role: "STAFF"
         })
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        throw new Error(errorData.error || 'Registration failed');
       }
 
       const data = await response.json();
-      toast.success("Admin registration successful!");
-      navigate("/sign-in");
+      if (data.role =="STAFF") {
+        localStorage.setItem("user", JSON.stringify(data));
+        navigate("/staff/dashboard");
+        toast.success("loged in successfully");
+      } else {
+        console.error("Invalid role or missing token");
+      }
       
     } catch (error) {
       toast.error(error.message || "Registration failed");
@@ -75,10 +81,10 @@ const SignAdmin = () => {
             </div>
             <div className="flex flex-col items-start gap-4 w-full">
               <p className="w-full text-3xl leading-[30px] font-semibold text-white">
-                Admin Registration
+                Staff Registration
               </p>
               <p className="w-full text-[#d5dfff] text-[18px] leading-5 mb-5">
-                Create an admin account to manage the library system.
+                Create a staff account to manage the library system.
               </p>
             </div>
           </header>
@@ -109,7 +115,7 @@ const SignAdmin = () => {
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Admin Code</label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Admin Verification Code</label>
                 <input
                   className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
                   type="password"
@@ -144,7 +150,7 @@ const SignAdmin = () => {
               type="submit"
               className="flex items-center justify-center gap-2 px-8 py-4 w-full bg-[#db4402] rounded-md min-h-[56px] hover:bg-[#e05206] hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] active:scale-98 active:shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
             >
-              <span className="text-white text-base leading-6 font-bold whitespace-nowrap">Register as Admin</span>
+              <span className="text-white text-base leading-6 font-bold whitespace-nowrap">Register a staff</span>
             </button>
 
             <div className="w-full text-center text-[#d5dfff] text-base leading-6">
