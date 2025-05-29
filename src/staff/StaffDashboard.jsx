@@ -286,7 +286,7 @@ export default function StaffDashboard() {
               recentBooks.map((book) => (
                 <div key={book.id} className="border border-gray-200 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-all duration-300">
                   <div className="h-44 bg-gray-200 flex items-center justify-center">
-                    <CoverImage coverUrl={book?.coverUrl} title={book.title} />
+                    <CoverImage coverUrl={book?.coverUrl} title={book.title} size={86} />
                   </div>
                   <div className="p-4">
                     <h3 className="font-medium text-[#1e293b] mb-1 line-clamp-1">{book.title}</h3>
@@ -333,7 +333,9 @@ export default function StaffDashboard() {
                 </div>
                 <div className="flex space-x-2">
                   <button className="px-3 py-1.5 bg-[#25388c] text-white rounded-lg text-xs font-medium hover:bg-[#1e2a6d] transition flex items-center"
-                    onClick={() => navigate('/staff/accountRequests')}
+                    onClick={() => {
+                      navigate('/staff/accountRequests', { state: { selectedRequest: item } });
+                    }}
                   >
                     Review
                   </button>

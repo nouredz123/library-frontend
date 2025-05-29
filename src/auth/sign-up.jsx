@@ -43,6 +43,7 @@ const SignUp = () => {
   });
   const [errors, setErrors] = useState({
     email: "",
+    password: ""
   });
 
   useEffect(() => {
@@ -68,18 +69,35 @@ const SignUp = () => {
     };
     reader.readAsDataURL(file);
   };
-  const handleSignUp = () => {
-    if (!formData.email || !formData.password || !formData.fullName) {
-      toast.error("Please fill in all fields.");
-      return;
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = {
+      email: "",
+      password: ""
+    };
+
+    // Validate required fields
+    if (!formData.email || !formData.password || !formData.fullName || !formData.identifier || !formData.dateOfBirth || !formData.wilaya || !formData.cardBase64) {
+      toast.error("Please fill in all required fields.");
+      valid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Invalid email format.";
+      valid = false;
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters.";
+      valid = false;
     }
-    const hasError = Object.values(errors).some(errorMsg => errorMsg);
-    if (hasError) {
-      toast.error("Please fix the validation errors before submitting.");
-      return
-    }
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const handleSignUp = (e) => {
+     e.preventDefault();
+    const isValid = validateForm();
+    if (!isValid) return;
     signup();
   };
+
 
   const signup = async () => {
     try {
@@ -123,7 +141,7 @@ const SignUp = () => {
         navigate("/member/Dashboard");
       } else if (data.role == "STAFF") {
         localStorage.setItem("user", JSON.stringify(data));
-        navigate("/staff/dashboard");
+        navigate("/staff/Dashboard");
       } else {
         console.error("Invalid role or missing token");
       }
@@ -183,11 +201,11 @@ const SignUp = () => {
             </div>
           </header>
 
-          <form id="sign-up-form" className="flex flex-col items-start gap-4 w-full" onSubmit={() => { }}>
+          <form id="sign-up-form" className="flex flex-col items-start gap-4 w-full">
             <div className="flex flex-col items-start gap-5 w-full py-2">
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Full Name</label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Full Name  <span className="text-red-500">*</span></label>
                 <input
                   className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
                   id="fullName"
@@ -203,13 +221,10 @@ const SignUp = () => {
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, fullName: e.target.value })) }}
                 />
-                {/* {errors.fullName && (
-                  <span className="text-[#ff4d4d] text-xs mt-1">{errors.fullName}</span>
-                )} */}
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Email</label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Email <span className="text-red-500">*</span></label>
                 <input
                   className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
                   id="email"
@@ -232,7 +247,27 @@ const SignUp = () => {
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Date of birth</label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Identifier  <span className="text-red-500">*</span></label>
+                <input
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  id='universityId'
+                  type="text"
+                  name="universityId"
+                  placeholder="e.g., 322345575412"
+                  value={formData.identifier}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById("password")?.focus();
+                    }
+                  }}
+                  onChange={(e) => { setFormData(prev => ({ ...prev, identifier: e.target.value })) }}
+
+                />
+              </div>
+
+              <div className="flex flex-col items-start gap-2 w-full">
+                <label className="w-full text-[#d5dfff] text-base leading-6">Date of birth  <span className="text-red-500">*</span></label>
                 <div className="relative w-full">
                   <input
                     className="flex items-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none appearance-none cursor-pointer"
@@ -259,21 +294,21 @@ const SignUp = () => {
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Major</label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Department  <span className="text-red-500">*</span></label>
                 <select
                   className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
                   id='departemnt'
                   name="Department"
                   value={formData.dempartment}
                   onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        document.getElementById("wilaya")?.focus();
-                      }
-                    }}
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById("wilaya")?.focus();
+                    }
+                  }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, department: e.target.value })) }}
                 >
-                  <option value="" disabled >Select your major</option>
+                  <option value="" disabled >Select your department</option>
                   <option value="Computer Science">Computer Science</option>
                   <option value="Mathematics">Mathematics</option>
                   <option value="Chemistry">Chemistry</option>
@@ -282,21 +317,21 @@ const SignUp = () => {
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Wilaya</label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Birth Wilaya  <span className="text-red-500">*</span></label>
                 <select
                   className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
                   id='wilaya'
                   name="wilaya"
                   value={formData.wilaya}
                   onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        document.getElementById("universityId")?.focus();
-                      }
-                    }}
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById("universityId")?.focus();
+                    }
+                  }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, wilaya: e.target.value })) }}
                 >
-                  <option value="" disabled>Select your wilaya</option>
+                  <option value="" disabled>Select your birth wilaya</option>
                   {algerianWilayas.map((wilaya, index) => (
                     <option key={index} value={wilaya}>{wilaya}</option>
                   ))}
@@ -304,27 +339,7 @@ const SignUp = () => {
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Identifier</label>
-                <input
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
-                  id='universityId'
-                  type="text"
-                  name="universityId"
-                  placeholder="e.g., 322345575412"
-                  value={formData.identifier}
-                  onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        document.getElementById("password")?.focus();
-                      }
-                    }}
-                  onChange={(e) => { setFormData(prev => ({ ...prev, identifier: e.target.value })) }}
-
-                />
-              </div>
-
-              <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Password</label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Password  <span className="text-red-500">*</span></label>
                 <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px]">
                   <input
                     id='password'
@@ -348,10 +363,13 @@ const SignUp = () => {
                     </span>
                   </div>
                 </div>
+                {errors.password && (
+                  <span className="text-[#ff4d4d] text-xs">{errors.password}</span>
+                )}
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Upload University ID Card</label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Upload University ID Card  <span className="text-red-500">*</span></label>
                 <div className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none gap-2.5 cursor-pointer">
                   <img className="w-5 h-5" src={documentUploadIcon} alt="Upload" />
                   <label htmlFor="file-upload" className="cursor-pointer">Upload a file</label>
@@ -386,9 +404,9 @@ const SignUp = () => {
               <Link to="/sign-in" className="font-bold text-[#db4402] hover:text-[#ff5c1b] transition-colors duration-300">Login</Link>
             </div>
             <div className="w-full text-center text-[#d5dfff] text-base leading-6 mt-2">
-              <span className="font-medium">Are you an admin?</span>
+              <span className="font-medium">Are you a staff?</span>
               <span>&nbsp;</span>
-              <Link to="/sign-admin" className="font-bold text-[#db4402] hover:text-[#ff5c1b] transition-colors duration-300">Register a staff</Link>
+              <Link to="/sign-up-staff" className="font-bold text-[#db4402] hover:text-[#ff5c1b] transition-colors duration-300">Register as staff</Link>
             </div>
           </form>
         </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { ChevronDown, ChevronUp, Filter, Search } from 'lucide-react';
 import AdminSideBar from '../components/AdminSideBar';
@@ -23,14 +23,14 @@ export default function AccountRequests() {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
 
+    const location = useLocation();
 
-    // Handler  search input
-    const handleSearch = (e) => setSearchQuery(e.target.value);
+    useEffect(() => {
+        if (location.state?.selectedRequest) {
+            setDetailModal(location.state.selectedRequest);
+        }
+    }, [location.state]);
 
-    const performSearch = () => {
-        setCurrentPage(0);
-        fetchAccountRequests(selectedStatus);
-    };
 
     const openModal = (user) => {
         setNewStatus("approved");
@@ -42,16 +42,6 @@ export default function AccountRequests() {
     const openDetailModal = (user) => setDetailModal(user);
     const closeDetailModal = () => setDetailModal(null);
 
-    // Logout 
-    const logout = () => {
-        localStorage.removeItem("user");
-        navigate("/sign-in", { replace: true });
-        console.log('Logging out...');
-        window.history.pushState(null, "", window.location.href);
-        window.onpopstate = function () {
-            window.history.pushState(null, "", window.location.href);
-        };
-    };
 
     // Sort 
     const handleSort = (field) => {
@@ -66,20 +56,42 @@ export default function AccountRequests() {
         });
     };
 
-    // Fetch account requests from API
     useEffect(() => {
-        setUser(JSON.parse(localStorage.getItem("user")));
-        fetchAccountRequests(selectedStatus);
-    }, [selectedStatus, currentPage, sortConfig]);
+        if (searchQuery.trim() === '') {
+            fetchAccountRequests();
+        }
+    }, [searchQuery]);
 
-    const fetchAccountRequests = async (status = "all") => {
+    useEffect(() => {
+        if (currentPage !== 0) {
+            setCurrentPage(0);
+        } else {
+            fetchAccountRequests();
+        }
+    }, [selectedStatus, sortConfig]);
+
+    useEffect(() => {
+        fetchAccountRequests();
+    }, [currentPage]);
+
+    const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() !== "") {
+      if (currentPage !== 0) {
+        setCurrentPage(0);
+      } else {
+        fetchAccountRequests();
+      }
+    }
+  };
+
+    const fetchAccountRequests = async () => {
         setIsLoading(true);
         const user = JSON.parse(localStorage.getItem("user"));
         let sortBy = sortConfig.field;
         let direction = sortConfig.direction;
 
         const params = new URLSearchParams();
-        if (status !== "all") params.append("status", status);
+        if (selectedStatus !== "all") params.append("status", selectedStatus);
         if (searchQuery) params.append("keyword", searchQuery);
         params.append("page", currentPage);
         params.append("sortBy", sortBy);
@@ -99,7 +111,8 @@ export default function AccountRequests() {
                     setRequests([]);
                     setTotalPages(0);
                     setTotalRequests(0);
-                    throw new Error(data.error);
+                     toast.error(data.error);
+                    return;
                 }
                 throw new Error(`Failed to fetch requests`);
             }
@@ -186,8 +199,8 @@ export default function AccountRequests() {
                                 placeholder="Search by name, email, or ID"
                                 className="w-full pl-10 pr-4 py-2 border border-[#e2e8f0] rounded-lg text-sm focus:border-[#25388c] focus:ring-1 focus:ring-[#25388c] focus:outline-none"
                                 value={searchQuery}
-                                onChange={handleSearch}
-                                onKeyDown={(e) => e.key === 'Enter' && performSearch()}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onKeyDown={handleKeyPress}
                             />
                             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                         </div>
@@ -212,7 +225,7 @@ export default function AccountRequests() {
                                 <select
                                     className="px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm w-[150px]"
                                     value={selectedStatus}
-                                    onChange={(e) => { setCurrentPage(0); setSelectedStatus(e.target.value); }}
+                                    onChange={(e) => {setSelectedStatus(e.target.value); }}
                                 >
                                     <option value="all">All Status</option>
                                     <option value="pending">Pending</option>
@@ -249,12 +262,6 @@ export default function AccountRequests() {
                                     className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-gray-100"
                                 >
                                     Clear Filters
-                                </button>
-                                <button
-                                    onClick={performSearch}
-                                    className="px-4 py-2 bg-[#25388c] text-white rounded-lg text-sm hover:bg-[#1e2a6d]"
-                                >
-                                    Apply Filters
                                 </button>
                             </div>
                         </div>
@@ -459,87 +466,71 @@ export default function AccountRequests() {
 
             {/* Detail Modal */}
             {detailModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
-                    <div className="bg-white rounded-2xl p-6 w-[600px] shadow-lg">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">Account Details</h3>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+                    <div className="bg-white rounded-2xl p-6 w-[800px] shadow-lg">
+                        <div className="flex justify-between items-start mb-6">
+                            <h3 className="text-xl font-semibold">User Details</h3>
                             <button onClick={closeDetailModal} className="text-[#475569] text-2xl font-semibold hover:text-black">
                                 ×
                             </button>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <h4 className="font-medium text-[#1e293b]">{detailModal.fullName}</h4>
-                                    <p className="text-[#64748b] text-sm">{detailModal.email}</p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <p className="text-[#64748b]">University ID</p>
-                                    <p className="font-medium">{detailModal.identifier}</p>
-                                </div>
-                                {detailModal.department && (
-                                    <div>
-                                        <p className="text-[#64748b]">Department</p>
-                                        <p className="font-medium">{detailModal.department}</p>
+                        <div className="flex gap-8">
+                            {/* Left side - User details */}
+                            <div className="w-1/2">
+                                <div className="mb-6">
+                                    <h4 className="text-sm font-medium text-[#64748b] mb-2">Personal Information</h4>
+                                    <div className="space-y-3">
+                                        <div>
+                                            <p className="text-xs text-[#64748b]">Full Name</p>
+                                            <p className="font-medium">{detailModal.fullName}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-[#64748b]">Email</p>
+                                            <p className="font-medium">{detailModal.email}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-[#64748b]">{detailModal.role === "ROLE_MEMBER" ? "University ID" : "Admin Code"}</p>
+                                            <p className="font-medium">{detailModal.identifier}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-[#64748b]">Role</p>
+                                            <span className={`inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700`}>
+                                                member
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-[#64748b]">Join Date</p>
+                                            <p className="font-medium">{formatDate(detailModal.joinDate)}</p>
+                                        </div>
+                                        {detailModal.role === "ROLE_MEMBER" && detailModal.major && (
+                                            <div>
+                                                <p className="text-xs text-[#64748b]">Major</p>
+                                                <p className="font-medium">{detailModal.major}</p>
+                                            </div>
+                                        )}
+                                        {detailModal.role === "ROLE_MEMBER" && detailModal.wilaya && (
+                                            <div>
+                                                <p className="text-xs text-[#64748b]">Wilaya</p>
+                                                <p className="font-medium">{detailModal.wilaya}</p>
+                                            </div>
+                                        )}
+                                        {detailModal.role === "ROLE_MEMBER" && detailModal.birthDate && (
+                                            <div>
+                                                <p className="text-xs text-[#64748b]">Birth Date</p>
+                                                <p className="font-medium">{formatDate(detailModal.birthDate)}</p>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
-                                {detailModal.birthWilaya && (
-                                    <div>
-                                        <p className="text-[#64748b]">Birth Wilaya</p>
-                                        <p className="font-medium">{detailModal.birthWilaya}</p>
-                                    </div>
-                                )}
-                                {detailModal.dateOfBirth && (
-                                    <div>
-                                        <p className="text-[#64748b]">Date of birth</p>
-                                        <p className="font-medium">{formatDate(detailModal.dateOfBirth)}</p>
-                                    </div>
-                                )}
-                                <div>
-                                    <p className="text-[#64748b]">Join Date</p>
-                                    <p className="font-medium">{formatDate(detailModal.joinDate)}</p>
                                 </div>
-                                <div>
-                                    <p className="text-[#64748b]">Status</p>
-                                    <span className={`inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium ${detailModal.accountStatus === "APPROVED"
-                                        ? 'bg-[#f0fdf4] text-[#15803d]'
-                                        : detailModal.accountStatus === "PENDING"
-                                            ? 'bg-[#fff7ed] text-[#c2410c]'
-                                            : 'bg-[#fee2e2] text-[#dc2626]'
-                                        }`}>
-                                        {detailModal.accountStatus === "APPROVED"
-                                            ? 'Approved'
-                                            : detailModal.accountStatus === "PENDING"
-                                                ? 'Pending'
-                                                : 'Rejected'}
-                                    </span>
-                                </div>
-                            </div>
 
-                            {detailModal.cardBase64 && (
-                                <div>
-                                    <p className="text-[#64748b] text-sm mb-2">University Card</p>
-                                    <img
-                                        src={`data:${detailModal.cardContentType};base64,${detailModal.cardBase64}`}
-                                        alt="University Card"
-                                        className="w-full max-h-48 object-contain rounded-lg border border-gray-200"
-                                        onClick={() => openImageModal(`data:${detailModal.cardContentType};base64,${detailModal.cardBase64}`)}
-                                    />
-                                </div>
-                            )}
-
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button
-                                    onClick={closeDetailModal}
-                                    className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-gray-50"
-                                >
-                                    Close
-                                </button>
-                                {detailModal.accountStatus === "PENDING" && (
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={closeDetailModal}
+                                        className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-gray-50"
+                                    >
+                                        Close
+                                    </button>
                                     <button
                                         onClick={() => {
                                             closeDetailModal();
@@ -549,8 +540,34 @@ export default function AccountRequests() {
                                     >
                                         Review Request
                                     </button>
-                                )}
+                                </div>
                             </div>
+
+                            {/* Right side - Card image for MEMBER, Staff Admin Display for STAFF */}
+                            {detailModal.role === "ROLE_MEMBER" ? (
+                                <div className="w-1/2">
+                                    <h4 className="text-sm font-medium text-[#64748b] mb-4">University Card</h4>
+                                    <div className="border border-[#e2e8f0] rounded-lg p-4 flex justify-center items-center h-64">
+                                        <img
+                                            src={detailModal.cardBase64 ? `data:${detailModal.cardContentType};base64,${detailModal.cardBase64}` : '/default-card.png'}
+                                            alt="User Card"
+                                            className="max-w-full max-h-full object-contain"
+                                            onClick={() => openImageModal(detailModal.cardBase64 ? `data:${detailModal.cardContentType};base64,${detailModal.cardBase64}` : '/default-card.png')}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-[#64748b] mt-2 text-center">Click on the image to view full size</p>
+                                </div>
+                            ) : (
+                                <div className="w-1/2 flex items-center justify-center">
+                                    <div className="text-center p-6 border border-[#e2e8f0] rounded-lg bg-gray-50">
+                                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                                            <span className="text-gray-400 text-2xl">👤</span>
+                                        </div>
+                                        <h4 className="text-lg font-medium text-[#475569] mb-2">Staff Account</h4>
+                                        <p className="text-sm text-[#64748b]">Administrator with system management privileges</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

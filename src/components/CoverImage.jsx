@@ -1,7 +1,7 @@
 import { Book } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 
-export default function CoverImage({ coverUrl, title = "book image" }) {
+export default function CoverImage({ coverUrl, title = "book image" , size = 64, color="#777" }) {
     const [imgError, setImgError] = useState(false);
     useEffect(() => {
         setImgError(false);
@@ -11,6 +11,8 @@ export default function CoverImage({ coverUrl, title = "book image" }) {
             onError={() => setImgError(true)}
         />
     ) : (
-        <Book size={64} color='#6b7280' />
+        <div className=' h-full w-full flex justify-center items-center'>
+            <Book size={size} color={color} />
+        </div>
     )
 }

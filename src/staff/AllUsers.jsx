@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { ChevronDown, ChevronUp, Filter, Search } from 'lucide-react';
 import AdminSideBar from '../components/AdminSideBar';
 import Pagination from '../components/Pagination';
+import { DateRange } from '@mui/icons-material';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const AllUsers = () => {
@@ -33,14 +34,39 @@ const AllUsers = () => {
     setSelectedImage(null);
   };
 
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      fetchUsers();
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (currentPage !== 0) {
+      setCurrentPage(0);
+    } else {
+      fetchUsers();
+    }
+  }, [selectedRole, sortConfig]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [currentPage]);
+
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() !== "") {
+      if (currentPage !== 0) {
+        setCurrentPage(0);
+      } else {
+        fetchUsers();
+      }
+    }
   };
 
-  const performSearch = () => {
-    setCurrentPage(0);
-    fetchUsers();
-  };
 
   // Sort handler
   const handleSort = (field) => {
@@ -56,13 +82,8 @@ const AllUsers = () => {
     fetchUsers();
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
 
   const fetchUsers = async () => {
-    setIsLoading(true);
     const user = JSON.parse(localStorage.getItem("user"));
     let sortBy = sortConfig.field;
     let direction = sortConfig.direction;
@@ -75,6 +96,7 @@ const AllUsers = () => {
     params.append("direction", direction);
 
     try {
+      setIsLoading(true);
       const response = await fetch(`${apiUrl}/api/staff/users?${params.toString()}`, {
         method: "GET",
         headers: {
@@ -84,7 +106,13 @@ const AllUsers = () => {
       });
       console.log("link:", `${apiUrl}/api/staff/users?${params.toString()}`)
       if (!response.ok) {
-        throw new Error(`Failed to fetch users`);
+        const data = await response.json();
+        console.log(data);
+        toast.error(data.error);
+        setUsers([]);
+        setTotalPages(0);
+        setTotalUsers(0);
+        return
       }
 
       const data = await response.json();
@@ -150,12 +178,6 @@ const AllUsers = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  // Pagination logic
-  const goToPage = (pageNumber) => {
-    if (pageNumber >= 0 && pageNumber < totalPages) {
-      setCurrentPage(pageNumber);
-    }
-  };
 
   // Get role label and style
   const getRoleLabel = (role) => {
@@ -168,15 +190,10 @@ const AllUsers = () => {
       : "bg-purple-100 text-purple-700";
   };
 
-  // Function to get the right identifier label
-  const getIdentifierLabel = (userType) => {
-    return userType === "MEMBER" ? "University ID" : "Admin Code";
-  };
 
   return (
     <div className="bg-[#f8f8ff] min-h-screen overflow-y-auto">
       <AdminSideBar />
-
       {/* Main Content */}
       <div className="ml-[288px] px-10 py-5">
         <div className="flex flex-row items-center justify-between">
@@ -192,8 +209,8 @@ const AllUsers = () => {
                 placeholder="Search by name, email, or ID"
                 className="w-full pl-10 pr-4 py-2 border border-[#e2e8f0] rounded-lg text-sm focus:border-[#25388c] focus:ring-1 focus:ring-[#25388c] focus:outline-none"
                 value={searchQuery}
-                onChange={handleSearch}
-                onKeyDown={(e) => e.key === 'Enter' && performSearch()}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyPress}
               />
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             </div>
@@ -253,12 +270,6 @@ const AllUsers = () => {
                   className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-gray-100"
                 >
                   Clear Filters
-                </button>
-                <button
-                  onClick={performSearch}
-                  className="px-4 py-2 bg-[#25388c] text-white rounded-lg text-sm hover:bg-[#1e2a6d]"
-                >
-                  Apply Filters
                 </button>
               </div>
             </div>

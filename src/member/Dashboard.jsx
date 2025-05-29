@@ -18,6 +18,7 @@ import toast from "react-hot-toast";
 import BookCard from "../components/BookCard";
 import BookDetailsModal from "../components/BookDetailsModal";
 import BorrowModal from "../components/BorrowModal";
+import Pagination from "../components/Pagination";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 export default function Dashboard() {
@@ -26,6 +27,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalBooks, setTotalBooks] = useState(0);
 
   const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
   const [borrowModalBook, setBorrowModalBook] = useState(null);
@@ -43,46 +47,31 @@ export default function Dashboard() {
   useEffect(() => {
     setIsPageLoaded(true);
   }, []);
-
-  const borrow = async (bookId) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    console.log("token:", user.token);
-    try {
-      const response = await fetch(`${apiUrl}/api/member/borrow`, {
-        method: "POST",
-        headers: {
-          "Content-type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({
-          bookId,
-          memberId: user.id,
-          pickupDate: "2025-01-01",
-          returnDate: "2525-09-09",
-        }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error);
-      }
-      const data = await response.json();
-      toast.success("Borrowings done successfully");
-      console.log("Borrow successful:", data);
-    } catch (error) {
-      toast.error(error.message);
-      console.log("Error:", error.message);
+  // Reset page when department changes
+  useEffect(() => {
+    if (selectedDepartment && currentPage !== 0) {
+      setCurrentPage(0);
+    } else if (selectedDepartment) {
+      fetchBooksByDepartment(selectedDepartment, currentPage);
     }
-  };
+  }, [selectedDepartment]);
+
+  // Fetch books when page changes
+  useEffect(() => {
+    if (selectedDepartment) {
+      fetchBooksByDepartment(selectedDepartment, currentPage);
+    }
+  }, [currentPage]);
 
   // Function to fetch books by department
-  const fetchBooksByDepartment = async (department) => {
+  const fetchBooksByDepartment = async (department, page = 0) => {
     const user = JSON.parse(localStorage.getItem("user"));
-    console.log("token:", user?.token);
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`${apiUrl}/api/member/books?department=${department}`,
+      const response = await fetch(
+        `${apiUrl}/api/member/books?department=${department}&page=${page}&size=8`,
         {
           method: "GET",
           headers: {
@@ -93,22 +82,34 @@ export default function Dashboard() {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch ${department} books`);
+        const data = await response.json();
+        if(data.error){
+          toast.error(data.error);
+          return
+        }else{
+          throw new Error(`Failed to fetch ${department} books`);
+        }
+        
       }
 
       const data = await response.json();
       console.log(data);
       setBooks(data.content || []);
+      setTotalPages(data.totalPages);
+      setTotalBooks(data.totalElements);
       setSelectedDepartment(department);
     } catch (error) {
       console.log(`Error fetching ${department} books:`, error);
       setError(`Failed to load books: ${error.message}`);
       toast.error("Failed to load books. Please try again later.");
       setBooks([]);
+      setTotalPages(0);
+      setTotalBooks(0);
     } finally {
       setLoading(false);
     }
   };
+
 
   const logout = () => {
     localStorage.removeItem("user");
@@ -181,7 +182,10 @@ export default function Dashboard() {
               <div className="flex items-center mb-8">
                 <button
                   className="flex items-center text-[#d5dfff] hover:text-[#db4402] mr-4 transition-colors duration-300 group"
-                  onClick={() => setSelectedDepartment(null)}
+                  onClick={() => {
+                    setSelectedDepartment(null);
+                    setCurrentPage(0);
+                  }}
                 >
                   <ArrowLeft
                     size={20}
@@ -195,6 +199,9 @@ export default function Dashboard() {
                     departments.find((d) => d.id === selectedDepartment)?.title
                   }{" "}
                   Books
+                  <span className="ml-4 text-lg text-gray-400">
+                    ({totalBooks} books)
+                  </span>
                 </h1>
               </div>
 
@@ -218,25 +225,34 @@ export default function Dashboard() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-                  {books.map((book, index) => (
-                    <div
-                      key={book.id}
-                      className={`transform transition-all duration-500 delay-${index * 100
-                        } animate-fadeIn hover:scale-105`}
-                    >
-                      <BookCard book={book} handleCardClick={handleCardClick} openBorrowModal={() => { setIsBorrowModalOpen(true); setBorrowModalBook(book) }} />
-                    </div>
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
+                    {books.map((book, index) => (
+                      <div
+                        key={book.id}
+                        className={`transform transition-all duration-500 delay-${index * 100
+                          } animate-fadeIn hover:scale-105`}
+                      >
+                        <BookCard book={book} handleCardClick={handleCardClick} openBorrowModal={() => { setIsBorrowModalOpen(true); setBorrowModalBook(book) }} />
+                      </div>
+                    ))}
+                  </div>
+                  {!loading && totalPages > 1 && (
+                    <Pagination 
+                      totalPages={totalPages} 
+                      currentPage={currentPage} 
+                      setCurrentPage={setCurrentPage} 
+                    />
+                  )}
+                </>
               )}
             </div>
           ) : (
-            // Home View with animations
+            // Rest of your existing code for the home view...
             <>
               {/* Hero Section with book animation  */}
               <div
-                className={`text-center py-6 px-6 text-[#d5dfff] ${fadeInClass}`}
+                className={`text-center py-6 px-6 text-[#fff] ${fadeInClass}`}
               >
                 <div className="relative inline-block mb-2">
                   <MenuBook className="text-[#db4402] text-5xl animate-bounce" />
@@ -250,12 +266,11 @@ export default function Dashboard() {
                     <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-[#db4402] animate-pulse"></span>
                   </span>
                 </h1>
-                <p className="text-xl mt-3 max-w-2xl mx-auto">
+                <p className="text-xl mt-3 max-w-2xl mx-auto text-[#d5dfff]">
                   Access curated content tailored to Computer Science, Math,
                   Physics, and Chemistry students
                 </p>
               </div>
-
 
               {/* Subject Cards with staggered animation */}
               <h2
@@ -291,7 +306,10 @@ export default function Dashboard() {
                       <p className="text-[#d5dfff] mb-4 h-12">{dept.tagline}</p>
                       <button
                         className="w-full bg-[#db4402] text-white py-2 px-4 rounded-md hover:bg-[#c23a02] transition-colors duration-300 flex items-center justify-center gap-2 group"
-                        onClick={() => fetchBooksByDepartment(dept.id)}
+                        onClick={() => {
+                          setCurrentPage(0);
+                          fetchBooksByDepartment(dept.id, 0);
+                        }}
                       >
                         Browse
                         <ChevronRight className="group-hover:translate-x-1 transition-transform duration-300" />
@@ -300,51 +318,51 @@ export default function Dashboard() {
                   </div>
                 ))}
               </div>
-            </>
-          )}
 
-          {!selectedDepartment && (
-            <div
-              className={`mt-20 bg-[#121a2e] rounded-lg p-8 ${fadeInClass} transition-all duration-700 delay-500`}
-            >
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                <LocalLibrary className="mr-2 text-[#db4402]" />
-                Library Hours & Information
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">
-                    Opening Hours
-                  </h3>
-                  <ul className="space-y-4 text-[#d5dfff]">
-                    <li className="flex justify-between">
-                      <span>Sunday - Thursday</span>
-                      <div className="text-right">
-                        <div>8:30 AM - 12:30 PM</div>
-                        <div>1:30 PM - 3:00 PM</div>
-                      </div>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Friday - Saturday</span>
-                      <span>Closed</span>
-                    </li>
-                  </ul>
+              {!selectedDepartment && (
+                <div
+                  className={`mt-20 bg-[#121a2e] rounded-lg p-8 ${fadeInClass} transition-all duration-700 delay-500`}
+                >
+                  <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+                    <LocalLibrary className="mr-2 text-[#db4402]" />
+                    Library Hours & Information
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-4">
+                        Opening Hours
+                      </h3>
+                      <ul className="space-y-4 text-[#d5dfff]">
+                        <li className="flex justify-between">
+                          <span>Sunday - Thursday</span>
+                          <div className="text-right">
+                            <div>8:30 AM - 12:30 PM</div>
+                            <div>1:30 PM - 3:00 PM</div>
+                          </div>
+                        </li>
+                        <li className="flex justify-between">
+                          <span>Friday - Saturday</span>
+                          <span>Closed</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-4">
+                        Library Rules
+                      </h3>
+                      <ul className="space-y-4 text-[#d5dfff] list-disc pl-5">
+                        <li>
+                          Book reservations expire after 3 days if not picked up
+                        </li>
+                        <li>Maximum borrowing duration is 1 week</li>
+                        <li>Maximum of 2 books can be borrowed at a time</li>
+                        <li>Books must be returned by the due date</li>
+                      </ul>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-white mb-4">
-                    Library Rules
-                  </h3>
-                  <ul className="space-y-4 text-[#d5dfff] list-disc pl-5">
-                    <li>
-                      Book reservations expire after 3 days if not picked up
-                    </li>
-                    <li>Maximum borrowing duration is 1 week</li>
-                    <li>Maximum of 2 books can be borrowed at a time</li>
-                    <li>Books must be returned by the due date</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </main>
         <BookDetailsModal

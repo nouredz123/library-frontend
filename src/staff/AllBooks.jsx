@@ -51,43 +51,32 @@ export default function AllBooks() {
     }
   }, [location.state]);
 
-
-
-  const addCopies = async (bookId, numberOfNewCopies) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const params = new URLSearchParams();
-    params.append("numberOfCopies", numberOfNewCopies);
-    try {
-      const response = await fetch(`${apiUrl}/api/staff/bookCopy/${bookId}?${params.toString()}`, {
-        method: "POST",
-        headers: {
-          'Content-type': 'application/json',
-          "Authorization": `Bearer ${user?.token || ''}`
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to add copies");
-      }
-
-      const data = await response.json();
-      toast.success(`Successfully added ${numberOfNewCopies} new copies`);
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
       fetchBooks();
-      closeDetailModal();
-    } catch (error) {
-      toast.error("Error adding new copies");
-      console.error(error);
     }
-  };
+  }, [searchQuery]);
 
+  useEffect(() => {
+    if (currentPage !== 0) {
+      setCurrentPage(0);
+    } else {
+      fetchBooks();
+    }
+  }, [selectedDepartment, sortOrder]);
 
-  const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-  };
-
-  const performSearch = () => {
-    setCurrentPage(0);
+  useEffect(() => {
     fetchBooks();
+  }, [currentPage]);
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() !== "") {
+      if (currentPage !== 0) {
+        setCurrentPage(0);
+      } else {
+        fetchBooks();
+      }
+    }
   };
 
   const openDetailModal = (book) => setDetailModal(book);
@@ -110,12 +99,6 @@ export default function AllBooks() {
     setShowDeleteModal(false);
     setSelectedBook(null);
   };
-
-  useEffect(() => {
-    setUser(JSON.parse(localStorage.getItem("user")));
-    fetchBooks();
-  }, [selectedDepartment, sortOrder, currentPage]);
-
 
   const fetchBooks = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -179,6 +162,34 @@ export default function AllBooks() {
     }
   }
 
+
+  const addCopies = async (bookId, numberOfNewCopies) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    const params = new URLSearchParams();
+    params.append("numberOfCopies", numberOfNewCopies);
+    try {
+      const response = await fetch(`${apiUrl}/api/staff/bookCopy/${bookId}?${params.toString()}`, {
+        method: "POST",
+        headers: {
+          'Content-type': 'application/json',
+          "Authorization": `Bearer ${user?.token || ''}`
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to add copies");
+      }
+
+      const data = await response.json();
+      toast.success(`Successfully added ${numberOfNewCopies} new copies`);
+      fetchBooks();
+      closeDetailModal();
+    } catch (error) {
+      toast.error("Error adding new copies");
+      console.error(error);
+    }
+  };
+
   const deleteBook = async (bookId) => {
     const user = JSON.parse(localStorage.getItem("user"));
     try {
@@ -200,6 +211,35 @@ export default function AllBooks() {
     } catch (error) {
       toast.error("Error deleting the book");
       console.log(`Error deleting the book:`, error);
+    }
+  };
+  const removeBookCopy = async (inventoryNumber) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    try {
+      const response = await fetch(`${apiUrl}/api/staff/bookCopy/${inventoryNumber}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${user?.token || ''}`
+        }
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        } else {
+          throw new Error("Failed to delete the bookCopy");
+        }
+      }
+
+      const data = await response.json();
+      console.log(data);
+      toast.success("BookCopy deleted successfully");
+      fetchBooks();
+    } catch (error) {
+      toast.error("Error deleting the bookCopy");
+      console.log(`Error deleting the bookCopy:`, error);
     }
   };
 
@@ -250,6 +290,12 @@ export default function AllBooks() {
   };
 
   const validateCote = async () => {
+    const coteRegex = /^\d{3}-\d{1,3}$/;
+
+    if (!coteRegex.test(bookData.cote)) {
+      setErrors(prev => ({ ...prev, cote: "Cote must be in format XXX-YYY (e.g., 004-153)" }));
+      return;
+    }
     const user = JSON.parse(localStorage.getItem("user"));
     try {
       const response = await fetch(`${apiUrl}/api/staff/validate/cote?cote=${encodeURIComponent(bookData.cote)}`, {
@@ -264,7 +310,7 @@ export default function AllBooks() {
         if (data === true) {
           setErrors(prev => ({ ...prev, cote: "" }));
         } else {
-          setErrors(prev => ({ ...prev, cote: "Cote already exists." }));
+          setErrors(prev => ({ ...prev, cote: "Invalid Cote" }));
         }
       } else {
         setErrors(prev => ({ ...prev, cote: "Something went wrong." }));
@@ -325,8 +371,8 @@ export default function AllBooks() {
                 placeholder="Search by title, author, or ISBN"
                 className="w-full pl-10 pr-4 py-2 border border-[#e2e8f0] rounded-lg text-sm focus:border-[#25388c] focus:ring-1 focus:ring-[#25388c] focus:outline-none"
                 value={searchQuery}
-                onChange={handleSearch}
-                onKeyDown={(e) => e.key === 'Enter' && performSearch()}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyPress}
               />
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             </div>
@@ -428,6 +474,7 @@ export default function AllBooks() {
                           <button
                             onClick={() => {
                               setSortOrder((prev) => {
+                                console.log("switching");
                                 switch (prev) {
                                   case "title":
                                     return "title-desc";
@@ -703,7 +750,7 @@ export default function AllBooks() {
                     {bookData.coverUrl && (
                       <div className="relative w-32 min-h-4">
                         <div >
-                          <CoverImage coverUrl={bookData?.coverUrl} />
+                          <CoverImage coverUrl={bookData?.coverUrl} size={86} />
                         </div>
                         <button
                           onClick={() => {
@@ -736,14 +783,16 @@ export default function AllBooks() {
       {/* Detail Modal */}
       {detailModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl w-full max-w-lg p-6 relative">
+          <div className="bg-white rounded-xl w-full max-w-2xl p-6 relative">
             <button className="absolute right-4 top-4" onClick={closeDetailModal}>
               <X className="w-5 h-5" />
             </button>
-            <div className="flex gap-6">
-              <CoverImage coverUrl={book?.coverUrl} title={book.title} />
+            <div className="flex gap-6 justify-center items-center ">
+              <div className='w-[232px] h-[288px]'>
+                <CoverImage coverUrl={detailModal?.coverUrl} title={detailModal.title} size={160} />
+              </div>
               <div className="flex flex-col gap-1 text-sm">
-                <h3 className="text-xl font-semibold mb-1">{detailModal.title}</h3>
+                <h3 className="text-xl font-semibold mb-1 px-2">{detailModal.title}</h3>
                 <p>Author: {detailModal.author}</p>
                 <p>Publisher: {detailModal.publisher}</p>
                 <p>Edition Year: {detailModal.editionYear}</p>
@@ -752,7 +801,7 @@ export default function AllBooks() {
                 <p>Department: {detailModal.department}</p>
                 <p className="mt-2 text-[#475569]">{detailModal.description || 'No description.'}</p>
 
-                {/* Add Copies  */}
+                {/* Copies Info */}
                 <div className="mt-4 pt-4 border-t">
                   <div className="flex items-center justify-between">
                     <p className="font-medium">Copies Management</p>
@@ -762,26 +811,55 @@ export default function AllBooks() {
                     </p>
                   </div>
 
+                  {/* Add Copies */}
                   <div className="mt-3 flex items-center gap-2">
                     <input
                       type="number"
                       min="1"
-                      placeholder="Number of copies"
+                      placeholder="Add copies"
                       className="px-3 py-1.5 border rounded-lg text-sm w-32"
-                      id="newCopiesCount"
+                      id="addCopiesCount"
                     />
                     <button
                       onClick={() => {
-                        const count = document.getElementById('newCopiesCount').value;
+                        const count = parseInt(document.getElementById('addCopiesCount').value);
                         if (count && count > 0) {
-                          addCopies(detailModal.id, parseInt(count));
+                          addCopies(detailModal.id, count);
                         } else {
-                          toast.error("Please enter a valid number of copies");
+                          toast.error("Please enter a valid number of copies to add");
                         }
                       }}
                       className="px-4 py-1.5 bg-[#25388c] text-white rounded-lg text-sm hover:bg-[#1e2a6d]"
                     >
                       Add Copies
+                    </button>
+                  </div>
+
+                  {/* Remove Copies */}
+                  <div className="mt-3 flex items-center gap-2">
+                    <input
+                      type="text"
+                      min="1"
+                      placeholder="Copy number e.g 3"
+                      className="px-3 py-1.5 border rounded-lg text-sm w-32"
+                      id="removeCopyNumber"
+                    />
+                    <button
+                      onClick={() => {
+                        const input = document.getElementById('removeCopyNumber');
+                        const value = parseInt(input.value.trim());
+
+                        if (!value) {
+                          toast.error("Please enter Copy number");
+                        } else if (value > detailModal.numberOfCopies || value <= 0) {
+                          toast.error("Invalid Copy number. must be less number the number of the copies and greater then 0");
+                        } else {
+                          removeBookCopy(`${detailModal.cote}.${value}`);
+                        }
+                      }}
+                      className="px-4 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
+                    >
+                      Remove Copy
                     </button>
                   </div>
                 </div>
@@ -790,6 +868,7 @@ export default function AllBooks() {
           </div>
         </div>
       )}
+
 
       {/* Delete Confirmation */}
       {showDeleteModal && (

@@ -42,18 +42,55 @@ export default function Search() {
     useEffect(() => {
         setIsPageLoaded(true);
     }, []);
+
     useEffect(() => {
-        handleSearch();
-    }, [availabilityFilter, sortBy, sortDirection, currentPage]);
+        if (searchQuery.trim() === '') {
+            handleSearch();
+        }
+    }, [searchQuery]);
+
     useEffect(() => {
-        setCurrentPage(0);
+        if (currentPage !== 0) {
+            setCurrentPage(0);
+        } else {
+            handleSearch();
+        }
     }, [availabilityFilter, sortBy, sortDirection]);
 
+    useEffect(() => {
+        handleSearch();
+    }, [currentPage]);
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter' && e.target.value.trim() !== "") {
+            if (currentPage !== 0) {
+                setCurrentPage(0);
+            } else {
+                handleSearch();
+            }
+        }
+    };
+
+    const handleClearSearch = () => {
+        setSearchQuery('');
+        setBooks([]);
+        setAvailabilityFilter('all');
+        setSortBy('title');
+        setSortDirection('asc');
+        setCurrentPage(0);
+    };
+
     const handleSearch = async () => {
-        if (!searchQuery.trim()) return;
         const user = JSON.parse(localStorage.getItem("user"));
         setLoading(true);
         setError('');
+        // Determine size based on screen width
+        let size = 8;
+        const width = window.innerWidth;
+
+        if (width < 1024) {
+            size = 6;
+        }
         let available = "all";
         switch (availabilityFilter) {
             case "available":
@@ -67,14 +104,16 @@ export default function Search() {
         }
         const params = new URLSearchParams();
         params.append("keyword", searchQuery);
+        params.append("searchBy", searchType);
         if (available !== "all") params.append("available", available);
 
         params.append("page", currentPage);
-        params.append("size", 12);
+        params.append("size", size);
         params.append("sortBy", sortBy);
         params.append("direction", sortDirection);
 
         try {
+            console.log(`${apiUrl}/api/member/books?${params.toString()}`);
             const response = await fetch(`${apiUrl}/api/member/books?${params.toString()}`, {
                 method: 'GET',
                 headers: {
@@ -103,21 +142,6 @@ export default function Search() {
         }
     };
 
-
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            handleSearch();
-        }
-    };
-
-    const handleClearSearch = () => {
-        setSearchQuery('');
-        setBooks([]);
-        setAvailabilityFilter('all');
-        setSortBy('title');
-        setSortDirection('asc');
-        setCurrentPage(0);
-    };
 
     const toggleSortDirection = () => {
         setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -182,7 +206,9 @@ export default function Search() {
                             <input
                                 type="text"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                }}
                                 onKeyDown={handleKeyPress}
                                 className="w-full px-4 py-3 pl-10 bg-[#232738] border-4 border-[#232738] rounded-lg text-[#d5dfff] focus:outline-none focus:border-[#db4402] transition-all duration-300"
                                 placeholder="Search by title, author, or ISBN..."
@@ -284,7 +310,7 @@ export default function Search() {
                             )}
 
                             {!loading && books.length > 0 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                     {books.map((book, index) => (
                                         <div
                                             key={book.id}

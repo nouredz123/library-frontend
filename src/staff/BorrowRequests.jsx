@@ -48,6 +48,7 @@ const BorrowRequests = () => {
     params.append("direction", direction);
 
     try {
+      setIsLoading(true);
       const response = await fetch(`${apiUrl}/api/staff/borrowings?${params.toString()}`, {
         method: "GET",
         headers: {
@@ -59,7 +60,6 @@ const BorrowRequests = () => {
       if (!response.ok) {
         const data = await response.json();
         console.log(data);
-        toast.error(data.error);
         setRequests([]);
         throw new Error(`Failed to fetch requests`);
       }
@@ -72,6 +72,8 @@ const BorrowRequests = () => {
 
     } catch (error) {
       console.log(`Error fetching requests:`, error);
+    }finally{
+      setIsLoading(false);
     }
   };
 
@@ -342,7 +344,7 @@ const BorrowRequests = () => {
                               Mark as Picked Up
                             </button>
                           )}
-                          {request.status === "PICKED_UP" || request.status === "OVERDUE" && (
+                          {request.status === "PICKED_UP" && (
                             <button
                               onClick={() => openModal(request)}
                               className="px-3 py-2 bg-[#dcfce7] text-[#15803d] rounded text-sm hover:bg-[#bbf7d0]"

@@ -66,7 +66,7 @@ export default function AdminSideBar() {
         <div className="py-5 flex flex-row gap-1.5 items-center">
           <img src={logo} alt="BookFSEI Logo" className="w-10 h-10" />
           <div className="text-[#25388c] font-semibold text-[26px] leading-6">
-            BookFSEI
+            FSEI Library
           </div>
         </div>
         <div className="border-t border-dashed border-[#8c8e98] my-4"></div>

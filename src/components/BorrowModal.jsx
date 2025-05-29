@@ -1,6 +1,7 @@
 import React from "react";
 import toast from "react-hot-toast";
 import { FaTimes } from "react-icons/fa";
+import CoverImage from "../components/CoverImage";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 export default function BorrowModal({ isOpen, book, onClose, cancel = false, borrowing = null }) {

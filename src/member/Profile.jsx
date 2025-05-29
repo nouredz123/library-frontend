@@ -16,6 +16,7 @@ import { FaRegCircleCheck } from "react-icons/fa6";
 import { FaCalendar } from "react-icons/fa";
 import { PiWarningDiamondBold } from "react-icons/pi";
 import { FaHourglassHalf } from "react-icons/fa6";
+import CoverImage from "../components/CoverImage";
 
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -172,7 +173,7 @@ const Profile = () => {
         </header>
 
         {/* Profile Hero Section */}
-        <div className={`text-center py-6 px-6 text-[#d5dfff] ${fadeInClass} transition-all duration-700 delay-100`}>
+        <div className={`text-center py-6 px-6 text-[#fff] ${fadeInClass} transition-all duration-700 delay-100`}>
           <div className="relative inline-block mb-2">
             <Person className="text-[#db4402] text-5xl animate-pulse" />
           </div>
@@ -180,7 +181,7 @@ const Profile = () => {
             Student Profile
             <span className="absolute -bottom-1 left-1/4 right-1/4 h-0.5 bg-[#db4402] animate-pulse"></span>
           </h1>
-          <p className="text-xl max-w-2xl mx-auto text-[#a5b1c2]">
+          <p className="text-xl max-w-2xl mx-auto text-[#d5dfff]">
             Manage your account information and track your borrowed books
           </p>
         </div>
@@ -188,10 +189,10 @@ const Profile = () => {
         {/* Main Content */}
         <div className={`w-full max-w-screen-xl mx-auto mt-4 px-4 ${fadeInClass} transition-all duration-700 delay-200`}>
           {/* Profile Container */}
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col md:flex-row md:gap-3 lg:gap-6">
             {/* Left Column - Student Info */}
             <div className="md:w-1/3 bg-[#121a2e] rounded-lg shadow-lg transform transition-all duration-500 hover:shadow-[0_0_15px_rgba(219,68,2,0.3)] border border-[#232738]">
-              <div className="p-6 relative">
+              <div className="md:p-2 lg:p-6 relative">
                 <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-[#db4402] rounded-full p-3 shadow-lg border-4 border-[#121a2e]">
                   <Person className="text-white text-3xl" />
                 </div>
@@ -261,18 +262,18 @@ const Profile = () => {
 
             {/* Right Column - Borrowed Books */}
             <div className="md:w-2/3 bg-[#121a2e] rounded-lg shadow-lg border border-[#232738]">
-              <div className="p-6">
+              <div className="md:p-2 lg:p-6">
                 <h2 className="text-2xl text-white font-bold mb-6 flex items-center">
                   <AutoStories className="mr-2 text-[#db4402]" />
                   Your Borrowed Books
                 </h2>
 
                 {/* Filter tabs */}
-                <div className="flex flex-wrap gap-2 mb-6 bg-[#1a2238] rounded-lg p-2">
+                <div className="flex flex-wrap gap-2 mb-6 bg-[#1a2238] rounded-lg md:p-1 lg:p-2">
                   {['all', 'active', 'pending', 'returned'].map(tab => (
                     <button
                       key={tab}
-                      className={`flex-1 min-w-[120px] py-2 text-center rounded-md transition-colors duration-300 ${activeBorrowingTab === tab ? 'bg-[#db4402] text-white' : 'text-[#d5dfff] hover:bg-[#232738]'
+                      className={`flex-1 min-w-[100px] py-2 text-center rounded-md transition-colors duration-300 ${activeBorrowingTab === tab ? 'bg-[#db4402] text-white' : 'text-[#d5dfff] hover:bg-[#232738]'
                         }`}
                       onClick={() => setActiveBorrowingTab(tab)}
                     >
@@ -292,7 +293,7 @@ const Profile = () => {
                         onClick={() => handleCardClick(borrowing)}
                         style={{ animationDelay: `${index * 100}ms` }}
                       >
-                        <div className="w-24 h-32 bg-[#232738] flex-shrink-0">
+                        <div className="w-24 h-32 bg-[#232738] flex-shrink-0 ">
                           <CoverImage coverUrl={borrowing?.bookCopy?.book?.coverUrl} title={borrowing?.bookCopy?.book.title} />
                         </div>
 

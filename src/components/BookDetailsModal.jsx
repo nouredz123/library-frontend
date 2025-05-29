@@ -37,7 +37,6 @@ export default function BookDetailsModal({ isOpen, onClose, book, borrowing = nu
             <p><span className="font-bold">Publisher:</span> {book?.publisher || 'Unknown Publisher'}</p>
             <p><span className="font-bold">ISBN:</span> {book?.isbn || 'N/A'}</p>
             <p><span className="font-bold">Department:</span> {book?.department || 'General'}</p>
-            <p><span className="font-bold">Copies:</span> {book?.copies || 'N/A'}</p>
             <p><span className="font-bold ">Status:</span> <span className={`${book.available ? "text-green-500" : "text-red-500"}`}>{book.available ? "Available" : "Not available"}</span></p>
           </div>
 
@@ -46,7 +45,8 @@ export default function BookDetailsModal({ isOpen, onClose, book, borrowing = nu
             <button
               onClick={() => setIsBorrowModalOpen(true)}
               className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded"
-              disabled={ borrowing && borrowing?.status != "RETURNED"}
+              // style={{display: (!borrowing || borrowing?.status == "RETURNED") || "none"}}
+              // disabled={ borrowing && borrowing?.status != "RETURNED"}
             >
               Borrow Book
             </button>
