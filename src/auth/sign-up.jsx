@@ -92,7 +92,7 @@ const SignUp = () => {
   };
 
   const handleSignUp = (e) => {
-     e.preventDefault();
+    e.preventDefault();
     const isValid = validateForm();
     if (!isValid) return;
     signup();

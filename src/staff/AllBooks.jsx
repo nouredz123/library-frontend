@@ -79,6 +79,22 @@ export default function AllBooks() {
     }
   };
 
+  const validateForm = () => {
+    let valid = true;
+
+    // Validate required fields
+    if (!bookData.title || !bookData.author || !bookData.publisher || !bookData.editionYear || !bookData.isbn || !bookData.cote || !bookData.numberOfCopies || !bookData.department) {
+      toast.error("Please fill in all required fields.");
+      valid = false;
+    }
+    return valid;
+  };
+  const handleSaveBook = () => {
+    const isValid = validateForm();
+    if (!isValid) return;
+    saveBook();
+  }
+
   const openDetailModal = (book) => setDetailModal(book);
   const closeDetailModal = () => setDetailModal(null);
 
@@ -290,6 +306,10 @@ export default function AllBooks() {
   };
 
   const validateCote = async () => {
+    if (bookData.cote === "") {
+      setErrors(prev => ({ ...prev, cote: "" }));
+      return;
+    }
     const coteRegex = /^\d{3}-\d{1,3}$/;
 
     if (!coteRegex.test(bookData.cote)) {
@@ -321,9 +341,22 @@ export default function AllBooks() {
   };
 
   const validateIsbn = async () => {
+    const isbn = bookData.isbn.trim();
+    if (isbn === "") {
+      setErrors(prev => ({ ...prev, isbn: "" }));
+      return;
+    }
+
+    const isValidIsbn10 = /^\d{9}[\dX]$/.test(isbn);
+    const isValidIsbn13 = /^\d{13}$/.test(isbn);
+
+    if (!isValidIsbn10 && !isValidIsbn13) {
+      setErrors(prev => ({ ...prev, isbn: "Invalid ISBN format (must be ISBN-10 or ISBN-13)." }));
+      return;
+    }
     const user = JSON.parse(localStorage.getItem("user"));
     try {
-      const response = await fetch(`${apiUrl}/api/staff/validate/isbn?isbn=${encodeURIComponent(bookData.isbn)}`, {
+      const response = await fetch(`${apiUrl}/api/staff/validate/isbn?isbn=${encodeURIComponent(isbn)}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${user?.token || ''}`
@@ -335,7 +368,7 @@ export default function AllBooks() {
         if (data === true) {
           setErrors(prev => ({ ...prev, isbn: "" }));
         } else {
-          setErrors(prev => ({ ...prev, isbn: "ISBN already exists." }));
+          setErrors(prev => ({ ...prev, isbn: "Invalid ISBN." }));
         }
       } else {
         setErrors(prev => ({ ...prev, isbn: "Something went wrong." }));
@@ -599,10 +632,10 @@ export default function AllBooks() {
 
               <form className="grid grid-cols-1 md:grid-cols-2 gap-6" onSubmit={(e) => {
                 e.preventDefault();
-                saveBook();
+                handleSaveBook();
               }}>
                 <div className="flex flex-col items-start gap-2 w-full">
-                  <label htmlFor="title" className="text-sm font-medium text-[#475569]">Title</label>
+                  <label htmlFor="title" className="text-sm font-medium text-[#475569]">Title <span className="text-red-500">*</span></label>
                   <input required
                     className="w-full px-4 py-2 border border-[#e2e8f0] rounded-lg focus:border-[#25388c] focus:outline-none"
                     id="title"
@@ -614,7 +647,7 @@ export default function AllBooks() {
                 </div>
 
                 <div className="flex flex-col items-start gap-2 w-full">
-                  <label htmlFor="author" className="text-sm font-medium text-[#475569]">Author</label>
+                  <label htmlFor="author" className="text-sm font-medium text-[#475569]">Author <span className="text-red-500">*</span></label>
                   <input required
                     className="w-full px-4 py-2 border border-[#e2e8f0] rounded-lg focus:border-[#25388c] focus:outline-none"
                     id="author"
@@ -626,7 +659,7 @@ export default function AllBooks() {
                 </div>
 
                 <div className="flex flex-col items-start gap-2 w-full">
-                  <label htmlFor="publisher" className="text-sm font-medium text-[#475569]">Publisher</label>
+                  <label htmlFor="publisher" className="text-sm font-medium text-[#475569]">Publisher <span className="text-red-500">*</span></label>
                   <input required
                     className="w-full px-4 py-2 border border-[#e2e8f0] rounded-lg focus:border-[#25388c] focus:outline-none"
                     id="publisher"
@@ -638,7 +671,7 @@ export default function AllBooks() {
                 </div>
 
                 <div className="flex flex-col items-start gap-2 w-full">
-                  <label htmlFor="editionYear" className="text-sm font-medium text-[#475569]">Edition Year</label>
+                  <label htmlFor="editionYear" className="text-sm font-medium text-[#475569]">Edition Year <span className="text-red-500">*</span></label>
                   <input required
                     className="w-full px-4 py-2 border border-[#e2e8f0] rounded-lg focus:border-[#25388c] focus:outline-none"
                     id="editionYear"
@@ -653,7 +686,7 @@ export default function AllBooks() {
 
                 {/* ISBN */}
                 <div className="flex flex-col items-start gap-2 w-full">
-                  <label htmlFor="isbn" className="text-sm font-medium text-[#475569]">ISBN</label>
+                  <label htmlFor="isbn" className="text-sm font-medium text-[#475569]">ISBN <span className="text-red-500">*</span></label>
                   <input
                     required
                     className="w-full px-4 py-2 border rounded-lg focus:border-[#25388c] focus:outline-none"
@@ -669,7 +702,7 @@ export default function AllBooks() {
 
                 {/* Cote */}
                 <div className="flex flex-col items-start gap-2 w-full">
-                  <label htmlFor="cote" className="text-sm font-medium text-[#475569]">Cote</label>
+                  <label htmlFor="cote" className="text-sm font-medium text-[#475569]">Cote <span className="text-red-500">*</span></label>
                   <input
                     required
                     className="w-full px-4 py-2 border rounded-lg focus:border-[#25388c] focus:outline-none"
@@ -685,7 +718,7 @@ export default function AllBooks() {
 
                 {/* Number of copies */}
                 <div className="flex flex-col items-start gap-2 w-full">
-                  <label htmlFor="copies" className="text-sm font-medium text-[#475569]">Number of Copies</label>
+                  <label htmlFor="copies" className="text-sm font-medium text-[#475569]">Number of Copies <span className="text-red-500">*</span></label>
                   <input
                     required
                     className="w-full px-4 py-2 border rounded-lg focus:border-[#25388c] focus:outline-none"
@@ -700,7 +733,7 @@ export default function AllBooks() {
 
                 {/* Department */}
                 <div className="flex flex-col items-start gap-2 w-full">
-                  <label className="text-sm font-medium text-[#475569]">Department</label>
+                  <label className="text-sm font-medium text-[#475569]">Department <span className="text-red-500">*</span></label>
                   <select
                     className="w-full px-4 py-2 border rounded-lg focus:border-[#25388c] focus:outline-none"
                     value={bookData.department}
@@ -715,7 +748,7 @@ export default function AllBooks() {
 
                 {/* Description */}
                 <div className="md:col-span-2 flex flex-col gap-2">
-                  <label htmlFor="description" className="text-sm font-medium text-[#475569]">Description</label>
+                  <label htmlFor="description" className="text-sm font-medium text-[#475569]">Description </label>
                   <textarea
                     id="description"
                     rows="4"
