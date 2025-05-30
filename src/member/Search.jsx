@@ -49,6 +49,10 @@ export default function Search() {
     useEffect(() => {
         if (location.state?.selectedDepartment) {
             setSelectedDepartment(location.state.selectedDepartment);
+            const element = document.getElementById("search-sec");
+        if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
         }
     }, [location.state]);
 

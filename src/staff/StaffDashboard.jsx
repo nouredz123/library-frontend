@@ -239,9 +239,6 @@ export default function StaffDashboard() {
                         <p className="text-sm text-[#64748b]">{req.bookCopy.inventoryNumber}</p>
                       </div>
                     </div>
-                    <button className="px-3 py-2 bg-[#e0e7ff] text-[#4338ca] rounded text-sm hover:bg-[#c7d2fe]">
-                      Mark as Picked up
-                    </button>
                   </div>
                 ))}
               </div>
@@ -323,7 +320,7 @@ export default function StaffDashboard() {
 
           {/* Account requests list - with consistent styling */}
           <div className="border rounded-lg divide-y">
-            {recentAccountRequests.map((item, index) => (
+            {recentAccountRequests.length > 0 ? (recentAccountRequests.map((item, index) => (
               <div key={index} className="flex items-center justify-between p-4 hover:bg-gray-50">
                 <div className="flex items-center">
                   <div className="ml-3">
@@ -341,7 +338,11 @@ export default function StaffDashboard() {
                   </button>
                 </div>
               </div>
-            ))}
+            ))) : (
+              <div className="flex  items-center justify-center py-12 text-center">
+                <h3 className="text-[#1e293b] font-medium mb-2">There are no pending account requests</h3>
+              </div>
+            )}
           </div>
         </div>
       </div>
