@@ -83,13 +83,13 @@ export default function Dashboard() {
 
       if (!response.ok) {
         const data = await response.json();
-        if(data.error){
+        if (data.error) {
           toast.error(data.error);
           return
-        }else{
+        } else {
           throw new Error(`Failed to fetch ${department} books`);
         }
-        
+
       }
 
       const data = await response.json();
@@ -238,10 +238,10 @@ export default function Dashboard() {
                     ))}
                   </div>
                   {!loading && totalPages > 1 && (
-                    <Pagination 
-                      totalPages={totalPages} 
-                      currentPage={currentPage} 
-                      setCurrentPage={setCurrentPage} 
+                    <Pagination
+                      totalPages={totalPages}
+                      currentPage={currentPage}
+                      setCurrentPage={setCurrentPage}
                     />
                   )}
                 </>
@@ -307,8 +307,9 @@ export default function Dashboard() {
                       <button
                         className="w-full bg-[#db4402] text-white py-2 px-4 rounded-md hover:bg-[#c23a02] transition-colors duration-300 flex items-center justify-center gap-2 group"
                         onClick={() => {
-                          setCurrentPage(0);
-                          fetchBooksByDepartment(dept.id, 0);
+                          navigate("/member/Search", {
+                            state: { selectedDepartment: dept.title },
+                          });
                         }}
                       >
                         Browse

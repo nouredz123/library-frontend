@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search as SearchIcon, Book, MenuBook, FilterList, Clear, ChevronRight, ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import logoutImg from '../assets/logout.png';
 import logo from '../assets/logo.png';
@@ -18,6 +18,7 @@ export default function Search() {
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [totalBooks, setTotalBooks] = useState(null);
+    const location = useLocation();
 
     const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
     const [borrowModalBook, setBorrowModalBook] = useState(null);
@@ -34,9 +35,11 @@ export default function Search() {
     const [searchType, setSearchType] = useState('all'); // 'title', 'author', 'isbn'
     const [availabilityFilter, setAvailabilityFilter] = useState('all'); // 'available', 'unavailable', 'all'
     const [sortBy, setSortBy] = useState('title'); // 'title', 'publicationYear'
+    const [selectedDepartment, setSelectedDepartment] = useState('all'); // 'title', 'publicationYear'
     const [sortDirection, setSortDirection] = useState('asc'); // 'asc', 'desc'
 
     const navigate = useNavigate();
+    const [shouldSearch, setShouldSearch] = useState(false);
 
     // Animation effect after component mounts
     useEffect(() => {
@@ -44,8 +47,14 @@ export default function Search() {
     }, []);
 
     useEffect(() => {
+        if (location.state?.selectedDepartment) {
+            setSelectedDepartment(location.state.selectedDepartment);
+        }
+    }, [location.state]);
+
+    useEffect(() => {
         if (searchQuery.trim() === '') {
-            handleSearch();
+            setShouldSearch(true);
         }
     }, [searchQuery]);
 
@@ -53,13 +62,20 @@ export default function Search() {
         if (currentPage !== 0) {
             setCurrentPage(0);
         } else {
-            handleSearch();
+            setShouldSearch(true);
         }
-    }, [availabilityFilter, sortBy, sortDirection]);
+    }, [availabilityFilter, sortBy, sortDirection, selectedDepartment]);
 
     useEffect(() => {
-        handleSearch();
+        setShouldSearch(true);
     }, [currentPage]);
+
+    useEffect(() => {
+    if (shouldSearch) {
+        handleSearch();
+        setShouldSearch(false);
+    }
+}, [shouldSearch]);
 
     const handleKeyPress = (e) => {
         if (e.key === 'Enter' && e.target.value.trim() !== "") {
@@ -75,12 +91,14 @@ export default function Search() {
         setSearchQuery('');
         setBooks([]);
         setAvailabilityFilter('all');
+        setSelectedDepartment("all");
         setSortBy('title');
         setSortDirection('asc');
         setCurrentPage(0);
     };
 
-    const handleSearch = async () => {
+    const handleSearch = async (dp = "not") => {
+        console.log(dp);
         const user = JSON.parse(localStorage.getItem("user"));
         setLoading(true);
         setError('');
@@ -103,10 +121,11 @@ export default function Search() {
                 break;
         }
         const params = new URLSearchParams();
+        if (dp !== "not") params.append("department", dp);
+        if (selectedDepartment !== "all") params.append("department", selectedDepartment);
+        if (available !== "all") params.append("available", available);
         params.append("keyword", searchQuery);
         params.append("searchBy", searchType);
-        if (available !== "all") params.append("available", available);
-
         params.append("page", currentPage);
         params.append("size", size);
         params.append("sortBy", sortBy);
@@ -262,6 +281,21 @@ export default function Search() {
                                         <option value="all">All Books</option>
                                         <option value="available">Available</option>
                                         <option value="unavailable">Unavailable</option>
+                                    </select>
+                                </div>
+                                {/* Department Filter */}
+                                <div className="flex items-center gap-2">
+                                    <label className="text-[#d5dfff]">Department:</label>
+                                    <select
+                                        className="bg-[#101624] text-[#d5dfff] px-3 py-1 border border-[#232738] rounded-md cursor-pointer hover:border-[#db4402] transition-colors duration-300"
+                                        value={selectedDepartment}
+                                        onChange={(e) => setSelectedDepartment(e.target.value)}
+                                    >
+                                        <option value="all">All Departments</option>
+                                        <option value="Computer Science">Computer Science</option>
+                                        <option value="Mathematics">Mathematics</option>
+                                        <option value="Chemistry">Chemistry</option>
+                                        <option value="Physics">Physics</option>
                                     </select>
                                 </div>
 
