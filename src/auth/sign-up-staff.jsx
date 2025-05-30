@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import logo from '../assets/logo.png';
 import eyeIcon from '../assets/eye.png';
 import eyeSlachIcon from '../assets/eye-slash.png';
@@ -10,9 +10,10 @@ import toast from 'react-hot-toast';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const SignUpStaff= () => {
+const SignUpStaff = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [showAdminCode, setShowAdminCode] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -23,9 +24,16 @@ const SignUpStaff= () => {
     email: "",
     password: ""
   });
+  useEffect(() => {
+    e.preventDefault();
+    document.getElementById("fullName")?.focus();
+  }, [])
 
   const togglePassword = () => {
     setShowPassword(!showPassword);
+  };
+  const toggleAdminCode = () => {
+    setShowAdminCode(!showAdminCode);
   };
 
   const validateForm = () => {
@@ -121,43 +129,75 @@ const SignUpStaff= () => {
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Full Name <span className="text-red-500">*</span></label>
                 <input
+                  id='fullName'
                   className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
                   type="text"
                   placeholder="Enter your full name"
                   value={formData.fullName}
                   onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById("email")?.focus();
+                    }
+                  }}
                 />
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Email <span className="text-red-500">*</span></label>
                 <input
+                  id='email'
                   className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
                   type="email"
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      document.getElementById("adminCode")?.focus();
+                    }
+                  }}
                 />
                 {errors.email && (
                   <span className="text-[#ff4d4d] text-xs mt-1">{errors.email}</span>
                 )}
               </div>
 
+
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Admin Verification Code <span className="text-red-500">*</span></label>
-                <input
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
-                  type="password"
-                  placeholder="Enter admin code"
-                  value={formData.adminCode}
-                  onChange={(e) => setFormData(prev => ({ ...prev, adminCode: e.target.value }))}
-                />
+                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px]">
+                  <input
+                    id='adminCode'
+                    type={showAdminCode ? "text" : "password"}
+                    className="bg-transparent border-none outline-none text-white text-base flex-1 transition-all duration-300"
+                    placeholder="Enter admin code"
+                    value={formData.adminCode}
+                    onChange={(e) => setFormData(prev => ({ ...prev, adminCode: e.target.value }))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        document.getElementById("password")?.focus();
+                      }
+                    }}
+                  />
+                  <div className="relative inline-block cursor-pointer" onClick={toggleAdminCode}>
+                    <img
+                      className="w-5 h-5 hover:scale-110 hover:opacity-80 transition-transform duration-200"
+                      src={!showAdminCode ? eyeIcon : eyeSlachIcon}
+                      alt="Toggle admin code"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Password <span className="text-red-500">*</span></label>
                 <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px]">
                   <input
+                    id='password'
                     type={showPassword ? "text" : "password"}
                     className="bg-transparent border-none outline-none text-white text-base flex-1 transition-all duration-300"
                     placeholder="Enter your password"
@@ -174,8 +214,8 @@ const SignUpStaff= () => {
                 </div>
               </div>
               {errors.password && (
-                  <span className="text-[#ff4d4d] text-xs mt-1">{errors.password}</span>
-                )}
+                <span className="text-[#ff4d4d] text-xs mt-1">{errors.password}</span>
+              )}
             </div>
 
             <button

@@ -77,7 +77,7 @@ export default function Search() {
         }
     }, [shouldSearch]);
 
-    const handleSearch = async (dp = "not") => {
+    const handleSearch = async (dp = "nodp") => {
         console.log(dp);
         const user = JSON.parse(localStorage.getItem("user"));
         setLoading(true);
@@ -103,7 +103,7 @@ export default function Search() {
         }
 
         const params = new URLSearchParams();
-        if (dp !== "not") params.append("department", dp);
+        if (dp !== "nodp") params.append("department", dp);
         if (selectedDepartment !== "all") params.append("department", selectedDepartment);
         if (available !== "all") params.append("available", available);
         params.append("keyword", searchQuery);

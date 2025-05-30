@@ -21,6 +21,7 @@ const AllUsers = () => {
   const [totalUsers, setTotalUsers] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [shouldSearch, setShouldSearch] = useState(false);
 
 
 
@@ -35,35 +36,46 @@ const AllUsers = () => {
     setSelectedImage(null);
   };
 
+  
   useEffect(() => {
-    fetchUsers();
+    setShouldSearch(true);
   }, []);
+
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
-      fetchUsers();
+      setShouldSearch(true);
     }
   }, [searchQuery]);
 
+  
   useEffect(() => {
     if (currentPage !== 0) {
       setCurrentPage(0);
     } else {
-      fetchUsers();
+      setShouldSearch(true);
     }
   }, [selectedRole, sortConfig]);
 
+  
   useEffect(() => {
-    fetchUsers();
+    setShouldSearch(true);
   }, [currentPage]);
 
+  
+  useEffect(() => {
+    if (shouldSearch) {
+      fetchUsers();
+      setShouldSearch(false);
+    }
+  }, [shouldSearch]);
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && e.target.value.trim() !== "") {
       if (currentPage !== 0) {
         setCurrentPage(0);
       } else {
-        fetchUsers();
+        setShouldSearch(true);
       }
     }
   };

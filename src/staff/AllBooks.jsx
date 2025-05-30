@@ -43,42 +43,55 @@ export default function AllBooks() {
     cote: "",
     isbn: "",
   });
+  const [shouldSearch, setShouldSearch] = useState(false);
 
 
+  // Set mode if navigated with "add" state
   useEffect(() => {
     if (location.state?.mode === "add") {
       setMode("add");
     }
   }, [location.state]);
 
+  // Trigger search if query is empty
   useEffect(() => {
     if (searchQuery.trim() === '') {
-      fetchBooks();
+      setShouldSearch(true);
     }
   }, [searchQuery]);
 
+  // Reset page to 0 on department or sort change, then trigger search
   useEffect(() => {
     if (currentPage !== 0) {
-      setCurrentPage(0);
+      setCurrentPage(0); // Triggers another effect
     } else {
-      fetchBooks();
+      setShouldSearch(true);
     }
   }, [selectedDepartment, sortOrder]);
 
+  // Trigger search when currentPage changes (e.g. pagination)
   useEffect(() => {
-    fetchBooks();
+    setShouldSearch(true);
   }, [currentPage]);
 
+  // Centralized fetchBooks call
+  useEffect(() => {
+    if (shouldSearch) {
+      fetchBooks();
+      setShouldSearch(false);
+    }
+  }, [shouldSearch]);
+
+  // Manual search on Enter key
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && e.target.value.trim() !== "") {
       if (currentPage !== 0) {
-        setCurrentPage(0);
+        setCurrentPage(0); // Will trigger search via currentPage effect
       } else {
-        fetchBooks();
+        setShouldSearch(true); // Trigger search directly
       }
     }
   };
-
   const validateForm = () => {
     let valid = true;
 

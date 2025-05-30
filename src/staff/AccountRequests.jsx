@@ -421,7 +421,7 @@ export default function AccountRequests() {
             {modalUser && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
                     <div className="bg-white rounded-2xl p-6 w-[500px] shadow-lg">
-                        <h3 className="text-lg font-semibold mb-4">Review Account Request</h3>
+                        <h3 className="text-lg font-semibold mb-4">Update Account Status</h3>
                         <div className="mb-5">
                             <div className="flex justify-between items-center mb-2">
                                 <p className="font-medium text-[#1e293b]">{modalUser.fullName}</p>
