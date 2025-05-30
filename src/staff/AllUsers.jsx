@@ -4,6 +4,7 @@ import { ChevronDown, ChevronUp, Filter, Search } from 'lucide-react';
 import AdminSideBar from '../components/AdminSideBar';
 import Pagination from '../components/Pagination';
 import { DateRange } from '@mui/icons-material';
+import UserDetailsModal from '../components/UserDetails';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const AllUsers = () => {
@@ -456,111 +457,7 @@ const AllUsers = () => {
 
       {/* Detailed View Modal */}
       {detailModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
-          <div className="bg-white rounded-2xl p-6 w-[800px] shadow-lg">
-            <div className="flex justify-between items-start mb-6">
-              <h3 className="text-xl font-semibold">User Details</h3>
-              <button onClick={closeDetailModal} className="text-[#475569] text-2xl font-semibold hover:text-black">
-                ×
-              </button>
-            </div>
-
-            <div className="flex gap-8">
-              {/* Left side - User details */}
-              <div className="w-1/2">
-                <div className="mb-6">
-                  <h4 className="text-sm font-medium text-[#64748b] mb-2">Personal Information</h4>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-xs text-[#64748b]">Full Name</p>
-                      <p className="font-medium">{detailModal.fullName}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#64748b]">Email</p>
-                      <p className="font-medium">{detailModal.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#64748b]">{detailModal.role === "ROLE_MEMBER" ? "University ID" : "Admin Code"}</p>
-                      <p className="font-medium">{detailModal.identifier}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#64748b]">Role</p>
-                      <span className={`inline-block mt-1 px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(detailModal.role)}`}>
-                        {getRoleLabel(detailModal.role)}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#64748b]">Join Date</p>
-                      <p className="font-medium">{formatDate(detailModal.joinDate)}</p>
-                    </div>
-                    {detailModal.role === "ROLE_MEMBER" && detailModal.major && (
-                      <div>
-                        <p className="text-xs text-[#64748b]">Major</p>
-                        <p className="font-medium">{detailModal.major}</p>
-                      </div>
-                    )}
-                    {detailModal.role === "ROLE_MEMBER" && detailModal.wilaya && (
-                      <div>
-                        <p className="text-xs text-[#64748b]">Wilaya</p>
-                        <p className="font-medium">{detailModal.wilaya}</p>
-                      </div>
-                    )}
-                    {detailModal.role === "ROLE_MEMBER" && detailModal.birthDate && (
-                      <div>
-                        <p className="text-xs text-[#64748b]">Birth Date</p>
-                        <p className="font-medium">{formatDate(detailModal.birthDate)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={closeDetailModal}
-                    className="px-4 py-2 border border-[#e2e8f0] rounded-lg text-sm hover:bg-gray-50"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      closeDetailModal();
-                      handleOpenDeleteModal(detailModal);
-                    }}
-                    className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm hover:bg-red-200 transition"
-                  >
-                    Delete User
-                  </button>
-                </div>
-              </div>
-
-              {/* Right side - Card image for MEMBER, Staff Admin Display for STAFF */}
-              {detailModal.role === "ROLE_MEMBER" ? (
-                <div className="w-1/2">
-                  <h4 className="text-sm font-medium text-[#64748b] mb-4">University Card</h4>
-                  <div className="border border-[#e2e8f0] rounded-lg p-4 flex justify-center items-center h-64">
-                    <img
-                      src={detailModal.cardBase64 ? `data:${detailModal.cardContentType};base64,${detailModal.cardBase64}` : '/default-card.png'}
-                      alt="User Card"
-                      className="max-w-full max-h-full object-contain"
-                      onClick={() => openImageModal(detailModal.cardBase64 ? `data:${detailModal.cardContentType};base64,${detailModal.cardBase64}` : '/default-card.png')}
-                    />
-                  </div>
-                  <p className="text-xs text-[#64748b] mt-2 text-center">Click on the image to view full size</p>
-                </div>
-              ) : (
-                <div className="w-1/2 flex items-center justify-center">
-                  <div className="text-center p-6 border border-[#e2e8f0] rounded-lg bg-gray-50">
-                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <span className="text-gray-400 text-2xl">👤</span>
-                    </div>
-                    <h4 className="text-lg font-medium text-[#475569] mb-2">Staff Account</h4>
-                    <p className="text-sm text-[#64748b]">Administrator with system management privileges</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <UserDetailsModal user={detailModal} closeDetailModal={closeDetailModal} openModal={handleOpenDeleteModal} openImageModal={openImageModal} />
       )}
     </div>
   );

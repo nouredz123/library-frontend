@@ -8,6 +8,10 @@ import {
   MenuBook,
   AutoStories,
   Bookmark,
+  LibraryBooks,
+  Schedule,
+  Info,
+  School,
 } from "@mui/icons-material";
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -47,6 +51,7 @@ export default function Dashboard() {
   useEffect(() => {
     setIsPageLoaded(true);
   }, []);
+
   // Reset page when department changes
   useEffect(() => {
     if (selectedDepartment && currentPage !== 0) {
@@ -63,9 +68,40 @@ export default function Dashboard() {
     }
   }, [currentPage]);
 
-  // Function to fetch books by department
+  const borrow = async (bookId) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    console.log("token:", user.token);
+    try {
+      const response = await fetch(`${apiUrl}/api/member/borrow`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${user.token}`,
+        },
+        body: JSON.stringify({
+          bookId,
+          memberId: user.id,
+          pickupDate: "2025-01-01",
+          returnDate: "2525-09-09",
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error);
+      }
+      const data = await response.json();
+      toast.success("Book borrowed successfully! Please collect from the library desk.");
+      console.log("Borrow successful:", data);
+    } catch (error) {
+      toast.error(error.message);
+      console.log("Error:", error.message);
+    }
+  };
+
+  // Function to fetch books by department with pagination
   const fetchBooksByDepartment = async (department, page = 0) => {
     const user = JSON.parse(localStorage.getItem("user"));
+    console.log("token:", user?.token);
     setLoading(true);
     setError(null);
 
@@ -85,11 +121,10 @@ export default function Dashboard() {
         const data = await response.json();
         if (data.error) {
           toast.error(data.error);
-          return
+          return;
         } else {
-          throw new Error(`Failed to fetch ${department} books`);
+          throw new Error(`Failed to fetch ${department} collection`);
         }
-
       }
 
       const data = await response.json();
@@ -99,9 +134,9 @@ export default function Dashboard() {
       setTotalBooks(data.totalElements);
       setSelectedDepartment(department);
     } catch (error) {
-      console.log(`Error fetching ${department} books:`, error);
-      setError(`Failed to load books: ${error.message}`);
-      toast.error("Failed to load books. Please try again later.");
+      console.log(`Error fetching ${department} collection:`, error);
+      setError(`Failed to load library collection: ${error.message}`);
+      toast.error("Failed to load books from library catalog. Please try again later.");
       setBooks([]);
       setTotalPages(0);
       setTotalBooks(0);
@@ -109,7 +144,6 @@ export default function Dashboard() {
       setLoading(false);
     }
   };
-
 
   const logout = () => {
     localStorage.removeItem("user");
@@ -129,7 +163,7 @@ export default function Dashboard() {
     `transition-all duration-700 ease-out delay-${index * 200}`;
 
   return (
-    <div className="flex justify-center w-full bg-[#101624] min-h-screen">
+    <div className="flex justify-center w-full bg-[#101624] min-h-screen fixed inset-0 overflow-y-auto">
       <div
         className="w-full max-w-[1440px] bg-[#101624] bg-cover bg-center"
         style={{ backgroundImage: "url(/assets/images/EXPORT-BG.png)" }}
@@ -142,236 +176,244 @@ export default function Dashboard() {
             onClick={() => navigate("/member/Dashboard")}
           >
             <div className="w-12 h-12 md:w-[60px] md:h-[56px] animate-pulse">
-              <img src={logo} alt="Logo" className="w-12 h-12 object-cover" />
+              <img src={logo} alt="Library Logo" className="w-12 h-12 object-cover" />
             </div>
-            <p className="text-2xl font-semibold">
-              <span className="text-white">Book</span>
-              <span className="text-[#db4402]">FSEI</span>
-            </p>
+            <div className="flex flex-col">
+              <p className="text-2xl font-semibold">
+                <span className="text-white">FSEI</span>
+                <span className="text-[#db4402]"> Library</span>
+              </p>
+              <p className="text-xs text-[#d5dfff] opacity-80">Digital Catalog System</p>
+            </div>
           </div>
           <nav className="flex flex-wrap items-center gap-6 md:gap-8">
-            <div className="text-[#db4402] text-lg font-medium relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#db4402]">
+            <div className="text-[#db4402] text-lg font-medium relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#db4402] flex items-center gap-1">
+              <LocalLibrary size={18} />
               Home
             </div>
             <Link
               to="/member/Search"
-              className="text-[#d5dfff] text-lg font-medium hover:text-[#db4402] transition-colors duration-300 relative hover:after:w-full after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#db4402] after:transition-all after:duration-300"
+              className="text-[#ffffff] text-lg font-medium hover:text-[#db4402] transition-colors duration-300 relative hover:after:w-full after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#db4402] after:transition-all after:duration-300 flex items-center gap-1"
             >
-              Search
+              <Book size={18} />
+              Catalog Search
             </Link>
             <Link
               to="/member/Profile"
-              className="text-[#d5dfff] text-lg font-medium hover:text-[#db4402] transition-colors duration-300 relative hover:after:w-full after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#db4402] after:transition-all after:duration-300"
+              className="text-[#ffffff] text-lg font-medium hover:text-[#db4402] transition-colors duration-300 relative hover:after:w-full after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#db4402] after:transition-all after:duration-300 flex items-center gap-1"
             >
-              Profile
+              <School size={18} />
+              My Account
             </Link>
             <img
               src={logoutImg}
               alt="Logout"
               className="cursor-pointer hover:opacity-80 transition-opacity duration-300 hover:rotate-12 transform"
               onClick={logout}
+              title="Sign Out"
             />
           </nav>
         </header>
 
         {/* Main Content with adjusted spacing */}
         <main className={`relative max-w-screen-xl mx-auto mt-2 px-4 py-5 ${fadeInClass} transition-all duration-700 delay-200`}>
-          {selectedDepartment ? (
-            // Department Books View with animations
-            <div className="bg-[#121a2e] rounded-lg p-8 shadow-lg transform transition-all duration-500 animate-fadeIn">
-              <div className="flex items-center mb-8">
-                <button
-                  className="flex items-center text-[#d5dfff] hover:text-[#db4402] mr-4 transition-colors duration-300 group"
-                  onClick={() => {
-                    setSelectedDepartment(null);
-                    setCurrentPage(0);
+          <>
+            {/* Hero Section with library focus */}
+            <div
+              className={`text-center py-6 px-6 text-[#d5dfff] ${fadeInClass}`}
+            >
+              <div className="relative inline-block mb-2">
+                <LocalLibrary className="text-[#db4402] text-5xl animate-bounce" />
+              </div>
+              <h1 className="text-5xl font-bold mb-4 relative">
+                <span className="text-white">FSEI Academic Library</span>
+                <br />
+                <span className="text-[#db4402] relative text-4xl">
+                  Digital Catalog & Borrowing System
+                  <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-[#db4402] animate-pulse"></span>
+                </span>
+              </h1>
+              <p className="text-xl mt-3 max-w-3xl mx-auto">
+                Discover, reserve, and borrow academic resources from our comprehensive collection
+                spanning Computer Science, Mathematics, Physics, and Chemistry
+              </p>
+
+              {/* Library Stats */}
+              <div className="flex justify-center gap-8 mt-8 flex-wrap">
+                <div className="bg-[#121a2e]/50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-[#db4402]">2,500+</div>
+                  <div className="text-sm text-[#d5dfff]">Books Available</div>
+                </div>
+                <div className="bg-[#121a2e]/50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-[#db4402]">4</div>
+                  <div className="text-sm text-[#d5dfff]">Departments</div>
+                </div>
+                <div className="bg-[#121a2e]/50 rounded-lg p-4 text-center">
+                  <div className="text-2xl font-bold text-[#db4402]">24/7</div>
+                  <div className="text-sm text-[#d5dfff]">Online Access</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Subject Cards with staggered animation */}
+            <h2
+              className={`text-2xl font-bold text-white mb-4 flex items-center ${fadeInClass} transition-all duration-700 delay-400`}
+            >
+              <LibraryBooks className="mr-2 text-[#db4402]" />
+              Browse Library Collections by Department
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-6">
+              {departments.map((dept, index) => (
+                <div
+                  key={dept.id}
+                  className={`bg-[#121a2e] rounded-lg overflow-hidden transform hover:scale-105 transition-all duration-500 shadow-lg border border-transparent hover:border-[#db4402]/30 opacity-0 animate-fadeIn`}
+                  style={{
+                    animationDelay: `${index * 200}ms`,
+                    animationFillMode: "forwards",
                   }}
                 >
-                  <ArrowLeft
-                    size={20}
-                    className="mr-1 group-hover:-translate-x-1 transition-transform duration-300"
-                  />
-                  Back
-                </button>
-                <h1 className="text-3xl font-bold text-white flex items-center">
-                  <LocalLibrary className="mr-2 text-[#db4402]" />
-                  {
-                    departments.find((d) => d.id === selectedDepartment)?.title
-                  }{" "}
-                  Books
-                  <span className="ml-4 text-lg text-gray-400">
-                    ({totalBooks} books)
-                  </span>
-                </h1>
+                  <div className="relative overflow-hidden h-48">
+                    <img
+                      src={dept.image}
+                      alt={`${dept.title} Collection`}
+                      className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 p-4">
+                      <h3 className="text-xl font-bold text-white">
+                        {dept.title}
+                      </h3>
+                      <p className="text-sm text-[#d5dfff] opacity-90">Academic Collection</p>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p className="text-[#d5dfff] mb-4 h-12">{dept.tagline}</p>
+                    <button
+                      className="w-full bg-[#db4402] text-white py-2 px-4 rounded-md hover:bg-[#c23a02] transition-colors duration-300 flex items-center justify-center gap-2 group"
+                      onClick={() => {
+                        setCurrentPage(0);
+                        navigate("/member/Search", {
+                          state: { selectedDepartment: dept.title },
+                        });
+                      }}
+                    >
+                      <Book size={16} />
+                      Browse Collection
+                      <ChevronRight className="group-hover:translate-x-1 transition-transform duration-300" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Quick Access Section */}
+            <div className={`mt-12 grid grid-cols-1 md:grid-cols-2 gap-6 ${fadeInClass} transition-all duration-700 delay-600`}>
+              <div className="bg-[#121a2e] rounded-lg p-6 hover:bg-[#1a2540] transition-colors duration-300">
+                <div className="flex items-center mb-4">
+                  <Book className="text-[#db4402] mr-3" size={24} />
+                  <h3 className="text-lg font-semibold text-white">Search Catalog</h3>
+                </div>
+                <p className="text-[#d5dfff] mb-4">
+                  Find specific books, authors, or topics across all our collections
+                </p>
+                <Link
+                  to="/member/Search"
+                  className="text-[#db4402] hover:text-[#c23a02] font-medium flex items-center gap-1"
+                >
+                  Search Now <ChevronRight size={16} />
+                </Link>
               </div>
 
-              {loading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#db4402]"></div>
+              <div className="bg-[#121a2e] rounded-lg p-6 hover:bg-[#1a2540] transition-colors duration-300">
+                <div className="flex items-center mb-4">
+                  <Schedule className="text-[#db4402] mr-3" size={24} />
+                  <h3 className="text-lg font-semibold text-white">My Borrowings</h3>
                 </div>
-              ) : error ? (
-                <div className="bg-red-900/30 border border-red-800 text-white p-4 rounded-md">
-                  {error}
-                </div>
-              ) : books.length === 0 ? (
-                <div className="text-center py-16 text-[#d5dfff]">
-                  <Book
-                    size={64}
-                    className="mx-auto text-gray-600 mb-4 animate-pulse"
-                  />
-                  <h3 className="text-xl font-semibold">No books found</h3>
-                  <p className="text-gray-400">
-                    No books are currently available in this category.
+                <p className="text-[#d5dfff] mb-4">
+                  View your borrowed books, due dates, and borrowing history
+                </p>
+                <Link
+                  to="/member/Profile"
+                  className="text-[#db4402] hover:text-[#c23a02] font-medium flex items-center gap-1"
+                >
+                  View Account <ChevronRight size={16} />
+                </Link>
+              </div>
+
+
+            </div>
+          </>
+          <div
+            className={`mt-20 bg-[#121a2e] rounded-lg p-8 ${fadeInClass} transition-all duration-700 delay-500`}
+          >
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <Schedule className="mr-2 text-[#db4402]" />
+              Library Services & Information
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <LocalLibrary className="mr-2 text-[#db4402]" size={20} />
+                  Library Hours
+                </h3>
+                <ul className="space-y-4 text-[#d5dfff]">
+                  <li className="flex justify-between">
+                    <span>Sunday - Thursday</span>
+                    <div className="text-right">
+                      <div>8:30 AM - 12:30 PM</div>
+                      <div>1:30 PM - 3:00 PM</div>
+                    </div>
+                  </li>
+                  <li className="flex justify-between">
+                    <span>Friday - Saturday</span>
+                    <span>Closed</span>
+                  </li>
+                </ul>
+                <div className="mt-4 p-3 bg-[#db4402]/10 rounded border-l-4 border-[#db4402]">
+                  <p className="text-sm text-[#d5dfff]">
+                    <strong>Note:</strong> Online catalog is available 24/7 for browsing and reservations
                   </p>
                 </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-6">
-                    {books.map((book, index) => (
-                      <div
-                        key={book.id}
-                        className={`transform transition-all duration-500 delay-${index * 100
-                          } animate-fadeIn hover:scale-105`}
-                      >
-                        <BookCard book={book} handleCardClick={handleCardClick} openBorrowModal={() => { setIsBorrowModalOpen(true); setBorrowModalBook(book) }} />
-                      </div>
-                    ))}
-                  </div>
-                  {!loading && totalPages > 1 && (
-                    <Pagination
-                      totalPages={totalPages}
-                      currentPage={currentPage}
-                      setCurrentPage={setCurrentPage}
-                    />
-                  )}
-                </>
-              )}
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+                  <Bookmark className="mr-2 text-[#db4402]" size={20} />
+                  Borrowing Policies
+                </h3>
+                <ul className="space-y-4 text-[#d5dfff] list-disc pl-5">
+                  <li>
+                    Book reservations expire after 3 days if not collected from library desk
+                  </li>
+                  <li>Standard borrowing period is 1 week (renewable once if no holds)</li>
+                  <li>Maximum of 2 books can be borrowed simultaneously per student</li>
+                </ul>
+              </div>
             </div>
-          ) : (
-            // Rest of your existing code for the home view...
-            <>
-              {/* Hero Section with book animation  */}
-              <div
-                className={`text-center py-6 px-6 text-[#fff] ${fadeInClass}`}
-              >
-                <div className="relative inline-block mb-2">
-                  <MenuBook className="text-[#db4402] text-5xl animate-bounce" />
-                </div>
-                <h1 className="text-5xl font-bold mb-4 relative">
-                  Welcome to the Official
-                  <br />
-                  Library Portal of{" "}
-                  <span className="text-[#db4402] relative">
-                    FSEI
-                    <span className="absolute -bottom-1 left-0 w-full h-0.5 bg-[#db4402] animate-pulse"></span>
+
+            {/* Contact Information */}
+            <div className="mt-8 pt-6 border-t border-gray-700">
+              <h3 className="text-lg font-semibold text-white mb-4">Library Contact Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[#d5dfff]">
+                <div>
+                  <strong className="text-white ">Location:</strong><br />
+                  <span className="text-sm">
+                    Bibliothèque Centrale<br />
+                    Avenue Hamadou Hossine, Mostaganem<br />
+                    27000 MOSTAGANEM<br />
+                    Algerie
                   </span>
-                </h1>
-                <p className="text-xl mt-3 max-w-2xl mx-auto text-[#d5dfff]">
-                  Access curated content tailored to Computer Science, Math,
-                  Physics, and Chemistry students
-                </p>
-              </div>
-
-              {/* Subject Cards with staggered animation */}
-              <h2
-                className={`text-2xl font-bold text-white mb-4 flex items-center ${fadeInClass} transition-all duration-700 delay-400`}
-              >
-                <Bookmark className="mr-2 text-[#db4402]" />
-                Browse by Department
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mt-6">
-                {departments.map((dept, index) => (
-                  <div
-                    key={dept.id}
-                    className={`bg-[#121a2e] rounded-lg overflow-hidden transform hover:scale-105 transition-all duration-500 shadow-lg border border-transparent hover:border-[#db4402]/30 opacity-0 animate-fadeIn`}
-                    style={{
-                      animationDelay: `${index * 200}ms`,
-                      animationFillMode: "forwards",
-                    }}
-                  >
-                    <div className="relative overflow-hidden h-48">
-                      <img
-                        src={dept.image}
-                        alt={dept.title}
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                      <div className="absolute bottom-0 left-0 p-4">
-                        <h3 className="text-xl font-bold text-white">
-                          {dept.title}
-                        </h3>
-                      </div>
-                    </div>
-                    <div className="p-4">
-                      <p className="text-[#d5dfff] mb-4 h-12">{dept.tagline}</p>
-                      <button
-                        className="w-full bg-[#db4402] text-white py-2 px-4 rounded-md hover:bg-[#c23a02] transition-colors duration-300 flex items-center justify-center gap-2 group"
-                        onClick={() => {
-                          navigate("/member/Search", {
-                            state: { selectedDepartment: dept.title },
-                          });
-                        }}
-                      >
-                        Browse
-                        <ChevronRight className="group-hover:translate-x-1 transition-transform duration-300" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {!selectedDepartment && (
-                <div
-                  className={`mt-20 bg-[#121a2e] rounded-lg p-8 ${fadeInClass} transition-all duration-700 delay-500`}
-                >
-                  <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-                    <LocalLibrary className="mr-2 text-[#db4402]" />
-                    Library Hours & Information
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-4">
-                        Opening Hours
-                      </h3>
-                      <ul className="space-y-4 text-[#d5dfff]">
-                        <li className="flex justify-between">
-                          <span>Sunday - Thursday</span>
-                          <div className="text-right">
-                            <div>8:30 AM - 12:30 PM</div>
-                            <div>1:30 PM - 3:00 PM</div>
-                          </div>
-                        </li>
-                        <li className="flex justify-between">
-                          <span>Friday - Saturday</span>
-                          <span>Closed</span>
-                        </li>
-                      </ul>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-4">
-                        Library Rules
-                      </h3>
-                      <ul className="space-y-4 text-[#d5dfff] list-disc pl-5">
-                        <li>
-                          Book reservations expire after 3 days if not picked up
-                        </li>
-                        <li>Maximum borrowing duration is 1 week</li>
-                        <li>Maximum of 2 books can be borrowed at a time</li>
-                        <li>Books must be returned by the due date</li>
-                      </ul>
-                    </div>
-                  </div>
                 </div>
-              )}
-            </>
-          )}
+                <div>
+                  <strong className="text-white ">Contact:</strong><br />
+                  <span className="text-sm">
+                    Phone: 045 41 69 34<br />
+                    Email: bcmunivmosta@gmail.com
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </main>
-        <BookDetailsModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          book={selectedBook}
-        />
-        <BorrowModal isOpen={isBorrowModalOpen} book={borrowModalBook} onClose={() => setIsBorrowModalOpen(false)} />
       </div>
     </div>
   );

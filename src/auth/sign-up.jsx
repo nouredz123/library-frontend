@@ -187,8 +187,8 @@ const SignUp = () => {
             <div className="inline-flex items-center gap-2">
               <img className="w-16 h-16" src={logo} alt="Logo" />
               <p className="text-3xl leading-6 font-semibold">
-                <span className="text-white">Book</span>
-                <span className="text-[#db4402]"> FSEI</span>
+                <span className="text-white">FSEI</span>
+                <span className="text-[#db4402]"> Library</span>
               </p>
             </div>
             <div className="flex flex-col items-start gap-4 w-full">
