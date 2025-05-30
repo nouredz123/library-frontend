@@ -8,8 +8,6 @@ import UserDetailsModal from '../components/UserDetails';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 export default function AccountRequests() {
-    const navigate = useNavigate();
-    const [user, setUser] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedStatus, setSelectedStatus] = useState('pending');
     const [currentPage, setCurrentPage] = useState(0);
@@ -23,6 +21,7 @@ export default function AccountRequests() {
     const [isLoading, setIsLoading] = useState(true);
     const [sortConfig, setSortConfig] = useState({ field: 'joinDate', direction: 'desc' });
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [shouldSearch, setShouldSearch] = useState(false);
 
 
     const location = useLocation();
@@ -58,9 +57,16 @@ export default function AccountRequests() {
         });
     };
 
+
+
+    useEffect(() => {
+        setShouldSearch(true);
+    }, []);
+
+
     useEffect(() => {
         if (searchQuery.trim() === '') {
-            fetchAccountRequests();
+            setShouldSearch(true);
         }
     }, [searchQuery]);
 
@@ -68,20 +74,30 @@ export default function AccountRequests() {
         if (currentPage !== 0) {
             setCurrentPage(0);
         } else {
-            fetchAccountRequests();
+            setShouldSearch(true);
         }
     }, [selectedStatus, sortConfig]);
 
+
     useEffect(() => {
-        fetchAccountRequests();
+        setShouldSearch(true);
     }, [currentPage]);
+
+
+    useEffect(() => {
+        if (shouldSearch) {
+            fetchAccountRequests();
+            setShouldSearch(false);
+        }
+    }, [shouldSearch]);
+
 
     const handleKeyPress = (e) => {
         if (e.key === 'Enter' && e.target.value.trim() !== "") {
             if (currentPage !== 0) {
                 setCurrentPage(0);
             } else {
-                fetchAccountRequests();
+                setShouldSearch(true);
             }
         }
     };

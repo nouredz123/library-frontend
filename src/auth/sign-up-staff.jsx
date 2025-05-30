@@ -25,7 +25,6 @@ const SignUpStaff = () => {
     password: ""
   });
   useEffect(() => {
-    e.preventDefault();
     document.getElementById("fullName")?.focus();
   }, [])
 
@@ -130,7 +129,7 @@ const SignUpStaff = () => {
                 <label className="w-full text-[#d5dfff] text-base leading-6">Full Name <span className="text-red-500">*</span></label>
                 <input
                   id='fullName'
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none focus:outline-[#ff5c1b] "
                   type="text"
                   placeholder="Enter your full name"
                   value={formData.fullName}
@@ -148,7 +147,7 @@ const SignUpStaff = () => {
                 <label className="w-full text-[#d5dfff] text-base leading-6">Email <span className="text-red-500">*</span></label>
                 <input
                   id='email'
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none focus:outline-[#ff5c1b] "
                   type="email"
                   placeholder="Enter your email"
                   value={formData.email}
@@ -168,7 +167,7 @@ const SignUpStaff = () => {
 
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Admin Verification Code <span className="text-red-500">*</span></label>
-                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px]">
+                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px] focus-within:outline focus-within:outline-[#ff5c1b] ">
                   <input
                     id='adminCode'
                     type={showAdminCode ? "text" : "password"}
@@ -195,11 +194,11 @@ const SignUpStaff = () => {
 
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Password <span className="text-red-500">*</span></label>
-                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px]">
+                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px] focus-within:outline focus-within:outline-[#ff5c1b] ">
                   <input
                     id='password'
                     type={showPassword ? "text" : "password"}
-                    className="bg-transparent border-none outline-none text-white text-base flex-1 transition-all duration-300"
+                    className="bg-transparent border-none outline-none text-white text-base flex-1 transition-all duration-300  "
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}

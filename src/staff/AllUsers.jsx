@@ -3,7 +3,6 @@ import toast from 'react-hot-toast';
 import { ChevronDown, ChevronUp, Filter, Search } from 'lucide-react';
 import AdminSideBar from '../components/AdminSideBar';
 import Pagination from '../components/Pagination';
-import { DateRange } from '@mui/icons-material';
 import UserDetailsModal from '../components/UserDetails';
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -23,8 +22,6 @@ const AllUsers = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [shouldSearch, setShouldSearch] = useState(false);
 
-
-
   const openDetailModal = (user) => setDetailModal(user);
   const closeDetailModal = () => setDetailModal(null);
 
@@ -36,7 +33,7 @@ const AllUsers = () => {
     setSelectedImage(null);
   };
 
-  
+
   useEffect(() => {
     setShouldSearch(true);
   }, []);
@@ -48,7 +45,7 @@ const AllUsers = () => {
     }
   }, [searchQuery]);
 
-  
+
   useEffect(() => {
     if (currentPage !== 0) {
       setCurrentPage(0);
@@ -57,12 +54,12 @@ const AllUsers = () => {
     }
   }, [selectedRole, sortConfig]);
 
-  
+
   useEffect(() => {
     setShouldSearch(true);
   }, [currentPage]);
 
-  
+
   useEffect(() => {
     if (shouldSearch) {
       fetchUsers();
@@ -80,8 +77,6 @@ const AllUsers = () => {
     }
   };
 
-
-  // Sort handler
   const handleSort = (field) => {
     setSortConfig(prevConfig => {
       if (prevConfig.field === field) {
@@ -117,26 +112,23 @@ const AllUsers = () => {
           "Authorization": `Bearer ${user?.token || ''}`
         }
       });
-      console.log("link:", `${apiUrl}/api/staff/users?${params.toString()}`)
-      if (!response.ok) {
-        const data = await response.json();
-        console.log(data);
-        toast.error(data.error);
-        setUsers([]);
-        setTotalPages(0);
-        setTotalUsers(0);
-        return
-      }
-
       const data = await response.json();
-      console.log(data);
+      if (!response.ok) {
+        if (data.error) {
+          toast.error(data.error);
+          setUsers([]);
+          setTotalPages(0);
+          setTotalUsers(0);
+          return
+        }
+        throw new Error();
+      }
 
       setUsers(data.content);
       setTotalPages(data.totalPages);
       setTotalUsers(data.totalElements);
 
     } catch (error) {
-      console.log(`Error fetching users:`, error);
       toast.error("Failed to load users");
     } finally {
       setIsLoading(false);
@@ -173,14 +165,16 @@ const AllUsers = () => {
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "Failed to delete the user");
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        }
+        throw new Error("Failed to delete the user");
       }
 
-      console.log(data);
       toast.success(`🗑️ ${data.message}`);
       fetchUsers();
     } catch (error) {
-      console.log(`Error deleting the user:`, error);
       toast.error(error.message);
     }
   }

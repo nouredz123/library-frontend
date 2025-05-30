@@ -19,17 +19,12 @@ export default function Search() {
     const [currentPage, setCurrentPage] = useState(0);
     const [totalPages, setTotalPages] = useState(1);
     const [totalBooks, setTotalBooks] = useState(null);
-    const location = useLocation();
 
     const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
     const [borrowModalBook, setBorrowModalBook] = useState(null);
 
     const [selectedBook, setSelectedBook] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const handleCardClick = (book) => {
-        setSelectedBook(book);
-        setIsModalOpen(true);
-    };
 
     const [isPageLoaded, setIsPageLoaded] = useState(false);
     const [searchType, setSearchType] = useState('all'); // 'title', 'author', 'isbn'
@@ -37,12 +32,18 @@ export default function Search() {
     const [sortBy, setSortBy] = useState('title'); // 'title', 'publicationYear'
     const [selectedDepartment, setSelectedDepartment] = useState('all');
     const [sortDirection, setSortDirection] = useState('asc'); // 'asc', 'desc'
+    const [shouldSearch, setShouldSearch] = useState(false);
 
     const navigate = useNavigate();
-    const [shouldSearch, setShouldSearch] = useState(false);
+    const location = useLocation();
+    const handleCardClick = (book) => {
+        setSelectedBook(book);
+        setIsModalOpen(true);
+    };
 
     // Animation effect after component mounts
     useEffect(() => {
+        isTokenValid();
         setIsPageLoaded(true);
     }, []);
 
@@ -50,9 +51,9 @@ export default function Search() {
         if (location.state?.selectedDepartment) {
             setSelectedDepartment(location.state.selectedDepartment);
             const element = document.getElementById("search-sec");
-        if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
         }
     }, [location.state]);
 
@@ -86,7 +87,7 @@ export default function Search() {
         const user = JSON.parse(localStorage.getItem("user"));
         setLoading(true);
         setError('');
-        
+
         // Determine size based on screen width
         let size = 12;
         const width = window.innerWidth;
@@ -125,22 +126,20 @@ export default function Search() {
                     'Authorization': `Bearer ${user.token}`
                 },
             });
+            const data = await response.json();
             if (!response.ok) {
-                if (response.status === 404) {
-                    throw new Error("No books found");
-                } else {
-                    throw new Error("Something went wrong, please try again later.");
+                if (data.error) {
+                    toast.error(data.error);
+                    return;
                 }
+                throw new Error("Something went wrong, please try again later.");
             }
 
-            const data = await response.json();
-            console.log(data);
             setBooks(data.content);
             setTotalPages(data.totalPages);
             setTotalBooks(data.totalElements);
         } catch (err) {
             setBooks([]);
-            console.error(err);
             toast.error(err.message);
         } finally {
             setLoading(false);
@@ -180,6 +179,25 @@ export default function Search() {
             window.history.pushState(null, "", window.location.href);
         };
     };
+    const isTokenValid = async () => {
+        const user = JSON.parse(localStorage.getItem("user"));
+        try {
+            const response = await fetch(`${apiUrl}/api/auth/validate/token?token=${user.token}&email=${user.email}"`, {
+                method: "GET",
+                headers: {
+                    'Content-type': 'application/json',
+                }
+            });
+            const data = await response.json();
+            if (response.ok) {
+                if (data !== true) {
+                    logout();
+                }
+            }
+        } catch (error) {
+            console.log(error.message)
+        }
+    }
 
     // CSS classes for animations
     const fadeInClass = isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10";
@@ -236,7 +254,7 @@ export default function Search() {
                         <p className="text-xl mt-3 max-w-3xl mx-auto">
                             Find books, authors, and academic resources across our comprehensive library collection
                         </p>
-                        
+
                         {/* Search Stats */}
                         <div className="flex justify-center gap-8 mt-8 flex-wrap">
                             <div className="bg-[#121a2e]/50 rounded-lg p-4 text-center">
@@ -260,7 +278,7 @@ export default function Search() {
                             <SearchIcon className="mr-2 text-[#db4402]" />
                             Search Library Catalog
                         </h2>
-                        
+
                         <div className="flex flex-col md:flex-row gap-4 mb-6">
                             <div className="relative flex-1">
                                 <input
@@ -304,7 +322,7 @@ export default function Search() {
                         <div className="flex flex-wrap items-center gap-4 p-4 bg-[#232738] rounded-lg">
                             <FilterList className="text-[#db4402]" />
                             <span className="text-[#d5dfff] font-medium">Filters:</span>
-                            
+
                             {/* Availability Filter */}
                             <div className="flex items-center gap-2">
                                 <label className="text-[#d5dfff]">Availability:</label>
@@ -408,7 +426,7 @@ export default function Search() {
                                 </div>
                             )}
                         </div>
-                        
+
                         {books.length > 0 && (
                             <div className="px-6 pb-6">
                                 <Pagination totalPages={totalPages} currentPage={currentPage} setCurrentPage={setCurrentPage} />

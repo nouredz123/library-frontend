@@ -27,9 +27,7 @@ const algerianWilayas = [
 
 const apiUrl = import.meta.env.VITE_API_URL;
 const SignUp = () => {
-
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -45,11 +43,11 @@ const SignUp = () => {
     email: "",
     password: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     document.getElementById('fullName')?.focus();
   }, []);
-
 
   const togglePassword = () => {
     setShowPassword(!showPassword);
@@ -121,20 +119,15 @@ const SignUp = () => {
         })
       });
 
+       const data = await response.json();
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`register failed: ${response.status} - ${errorText}`);
+        if(data.error){
+          toast.error(data.error);
+          return;
+        }else{
+          throw new Error("Somthing went wrong, please try again later.");
+        }
       }
-
-      const data = await response.json();
-      console.log(data);
-      setFormData({
-        email: "",
-        password: "",
-        fullName: "",
-        identifier: "",
-        cardBase64: ""
-      })
 
 
       if (data && data.role == "MEMBER") {
@@ -148,7 +141,7 @@ const SignUp = () => {
       }
 
     } catch (error) {
-
+      toast.error(error.message);
     }
   }
 
@@ -204,11 +197,10 @@ const SignUp = () => {
 
           <form id="sign-up-form" className="flex flex-col items-start gap-4 w-full">
             <div className="flex flex-col items-start gap-5 w-full py-2">
-
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Full Name  <span className="text-red-500">*</span></label>
                 <input
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none focus:outline-[#ff5c1b]"
                   id="fullName"
                   name="fullName"
                   type="text"
@@ -227,7 +219,7 @@ const SignUp = () => {
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Email <span className="text-red-500">*</span></label>
                 <input
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none focus:outline-[#ff5c1b]"
                   id="email"
                   name="email"
                   type="email"
@@ -248,9 +240,9 @@ const SignUp = () => {
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
-                <label className="w-full text-[#d5dfff] text-base leading-6">Identifier  <span className="text-red-500">*</span></label>
+                <label className="w-full text-[#d5dfff] text-base leading-6">Identifier <span className="text-red-500">*</span></label>
                 <input
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none focus:outline-[#ff5c1b]"
                   id='universityId'
                   type="text"
                   name="universityId"
@@ -271,7 +263,7 @@ const SignUp = () => {
                 <label className="w-full text-[#d5dfff] text-base leading-6">Date of birth  <span className="text-red-500">*</span></label>
                 <div className="relative w-full">
                   <input
-                    className="flex items-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none appearance-none cursor-pointer"
+                    className="flex items-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none appearance-none cursor-pointer focus:outline-[#ff5c1b]"
                     id="dateOfBirth"
                     type="date"
                     name="dateOfBirth"
@@ -297,7 +289,7 @@ const SignUp = () => {
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Department  <span className="text-red-500">*</span></label>
                 <select
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none focus:outline-[#ff5c1b]"
                   id='departemnt'
                   name="Department"
                   value={formData.department}
@@ -320,7 +312,7 @@ const SignUp = () => {
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Birth Wilaya  <span className="text-red-500">*</span></label>
                 <select
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none focus:outline-[#ff5c1b]"
                   id='wilaya'
                   name="wilaya"
                   value={formData.wilaya}
@@ -341,7 +333,7 @@ const SignUp = () => {
 
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Password  <span className="text-red-500">*</span></label>
-                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px]">
+                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px]  focus-within:outline focus-within:outline-[#ff5c1b]">
                   <input
                     id='password'
                     type={showPassword ? "text" : "password"}
@@ -371,7 +363,7 @@ const SignUp = () => {
 
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Upload University ID Card  <span className="text-red-500">*</span></label>
-                <div className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none gap-2.5 cursor-pointer">
+                <div className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none gap-2.5 cursor-pointer focus-within:outline focus-within:outline-[#ff5c1b]">
                   <img className="w-5 h-5" src={documentUploadIcon} alt="Upload" />
                   <label htmlFor="file-upload" className="cursor-pointer">Upload a file</label>
                   <input

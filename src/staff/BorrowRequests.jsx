@@ -31,21 +31,16 @@ const BorrowRequests = () => {
     setCurrentPage(0);
     fetchRequests(selectedStatus, sortConfig);
   };
-  const fetchRequests = async (status = "pending", sort = "newest") => {
+  const fetchRequests = async (status = "pending", sort) => {
     const user = JSON.parse(localStorage.getItem("user"));
-    let sortBy = "addedDate";
-    let direction = "asc";
 
-    if (sort === "oldest") {
-      direction = "desc";
-    }
 
     const params = new URLSearchParams();
     if (status !== "all") params.append("status", status);
     if (searchQuery) params.append("keyword", searchQuery);
     params.append("page", currentPage);
-    params.append("sortBy", sortBy);
-    params.append("direction", direction);
+    params.append("sortBy", sortConfig.field);
+    params.append("direction", sortConfig.direction);
 
     try {
       setIsLoading(true);
@@ -57,22 +52,24 @@ const BorrowRequests = () => {
         }
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
-        console.log(data);
+        if (data.error) {
+          toast.error(data.error);
+          setRequests([]);
+          return;
+        }
         setRequests([]);
         throw new Error(`Failed to fetch requests`);
       }
 
-      const data = await response.json();
-      console.log("borrowings: ", data);
       setRequests(data.content);
       setTotalPages(data.totalPages);
       setTotalRequests(data.totalElements);
 
     } catch (error) {
       console.log(`Error fetching requests:`, error);
-    }finally{
+    } finally {
       setIsLoading(false);
     }
   };
@@ -95,7 +92,11 @@ const BorrowRequests = () => {
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "Failed to update request status");
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        }
+        throw new Error("Failed to update request status");
       }
       closeModal();
       toast.success(
@@ -212,7 +213,7 @@ const BorrowRequests = () => {
                   value={`${sortConfig.field}-${sortConfig.direction}`}
                   onChange={(e) => {
                     const [field, direction] = e.target.value.split('-');
-                    setSortConfig({ field, direction });
+                    setSortConfig({ field: field, direction: direction });
                   }}
                 >
                   <option value="addedDate-desc">Newest First</option>

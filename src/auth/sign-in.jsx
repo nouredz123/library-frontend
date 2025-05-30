@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.png';
 import eyeIcon from '../assets/eye.png';
@@ -11,18 +11,21 @@ import toast from 'react-hot-toast';
 const apiUrl = import.meta.env.VITE_API_URL;
 
 export default function SignIn() {
+  const navigate = useNavigate();
+  //state to store form data
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   })
-  const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const passwordRef = useRef(null);
-
   const [errors, setErrors] = useState({
     email: "",
     password: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   useEffect(() => {
     document.getElementById('email')?.focus();
@@ -35,9 +38,6 @@ export default function SignIn() {
     }
   }, [navigate]);
 
-  const togglePassword = () => {
-    setShowPassword(!showPassword);
-  };
   const validateForm = () => {
     let valid = true;
     const newErrors = {
@@ -45,7 +45,6 @@ export default function SignIn() {
       password: ""
     };
 
-    // Validate required fields
     if (!formData.email || !formData.password) {
       toast.error("Please fill in all required fields.");
       valid = false;
@@ -68,7 +67,6 @@ export default function SignIn() {
   };
 
 
-
   const login = async () => {
     try {
       const response = await fetch(`${apiUrl}/api/auth/login`, {
@@ -82,15 +80,16 @@ export default function SignIn() {
         })
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        toast.error(data.error);
-        return;
-      }
-
       const data = await response.json();
-      console.log(data);
 
+      if (!response.ok) {
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        }else{
+          throw new Error(data.error);
+        }
+      }
 
       if (data && data.role == "MEMBER") {
         localStorage.setItem("user", JSON.stringify(data));
@@ -103,9 +102,7 @@ export default function SignIn() {
       } else {
         console.error("Invalid role or missing token");
       }
-
     } catch (error) {
-      //toast.error("Somthing went wrong, please try again later.");
       toast.error(error.message);
       console.error("Error:", error.message);
     }
@@ -140,7 +137,7 @@ export default function SignIn() {
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Email <span className="text-red-500">*</span></label>
                 <input
-                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
+                  className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none focus:outline-[#ff5c1b] "
                   id="email"
                   name="email"
                   type="email"
@@ -149,7 +146,7 @@ export default function SignIn() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      passwordRef?.current?.focus();
+                      document.getElementById("password").focus();
                     }
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, email: e.target.value })) }}
@@ -161,9 +158,9 @@ export default function SignIn() {
 
               <div className="flex flex-col items-start gap-2 w-full">
                 <label className="w-full text-[#d5dfff] text-base leading-6">Password  <span className="text-red-500">*</span></label>
-                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px]">
+                <div className="flex h-[50px] items-center gap-1.5 px-3 py-2 w-full bg-[#232839] rounded-[5px] focus-within:outline focus-within:outline-[#ff5c1b] ">
                   <input
-                    ref={passwordRef}
+                    id='password'
                     type={showPassword ? "text" : "password"}
                     className="bg-transparent border-none outline-none text-white text-base flex-1 transition-all duration-300"
                     name="password"

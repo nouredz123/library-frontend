@@ -20,6 +20,7 @@ import { FaCalendar } from "react-icons/fa";
 import { PiWarningDiamondBold } from "react-icons/pi";
 import { FaHourglassHalf } from "react-icons/fa6";
 import CoverImage from "../components/CoverImage";
+import toast from "react-hot-toast";
 
 
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -37,6 +38,9 @@ const Profile = () => {
 
 
   const navigate = useNavigate();
+  useEffect(() => {
+    isTokenValid();
+  }, []);
 
   // Animation  after component mounts
   useEffect(() => {
@@ -77,21 +81,21 @@ const Profile = () => {
       const response = await fetch(`${apiUrl}/api/member/${user?.id}/borrowings?paged=false`, {
         method: "GET",
         headers: {
-          'Content-type': 'application/json',
           "Authorization": `Bearer ${user?.token || ''}`
         }
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const error = await response.text();
-        console.error("Get borrowings failed:", error);
-      } else {
-        const data = await response.json();
-        setBorrowings(data.content);
-        console.log("Borrowings fetch successful:", data);
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        }
+        throw new Error();
       }
+      setBorrowings(data.content);
     } catch (error) {
-      console.error("Error fetching borrowings:", error);
+      toast.error("Error fetching borrowings");
     }
   };
 
@@ -126,6 +130,25 @@ const Profile = () => {
       window.history.pushState(null, "", window.location.href);
     };
   };
+  const isTokenValid = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/validate/token?token=${user.token}&email=${user.email}"`, {
+        method: "GET",
+        headers: {
+          'Content-type': 'application/json',
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        if (data !== true) {
+          logout();
+        }
+      }
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
 
   // CSS classes for animations
   const fadeInClass = isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10";

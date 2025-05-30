@@ -15,11 +15,11 @@ export default function AdminSideBar() {
   const location = useLocation();
   const [userInfo, setUserInfo] = useState({});
 
-  useEffect(()=>{
+  useEffect(() => {
     getAdminInfo();
   }, [])
 
-  const getAdminInfo = async()=>{
+  const getAdminInfo = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
 
     try {
@@ -53,14 +53,14 @@ export default function AdminSideBar() {
       window.history.pushState(null, "", window.location.href);
     };
   };
-  
+
 
   // Function to check if link is active
   const isActive = (path) => location.pathname === path;
 
   return (
     <div className="fixed top-0 left-0 h-screen w-[288px] bg-white border-r border-[#edf1f1] flex flex-col justify-between p-4">
-      
+
       {/* Top Section */}
       <div>
         <div className="py-5 flex flex-row gap-1.5 items-center">
@@ -76,9 +76,8 @@ export default function AdminSideBar() {
           {/* Home */}
           <Link
             to="/staff/Dashboard"
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${
-              isActive("/staff/Dashboard") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${isActive("/staff/Dashboard") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
+              }`}
           >
             <img
               src={home}
@@ -93,9 +92,8 @@ export default function AdminSideBar() {
           {/* All Users */}
           <Link
             to="/staff/AllUsers"
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${
-              isActive("/staff/AllUsers") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${isActive("/staff/AllUsers") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
+              }`}
           >
             <img
               src={profile}
@@ -110,9 +108,8 @@ export default function AdminSideBar() {
           {/* All Books */}
           <Link
             to="/staff/AllBooks"
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${
-              isActive("/staff/AllBooks") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${isActive("/staff/AllBooks") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
+              }`}
           >
             <img
               src={book}
@@ -127,9 +124,8 @@ export default function AdminSideBar() {
           {/* Borrow Requests */}
           <Link
             to="/staff/borrowrequests"
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${
-              isActive("/staff/borrowrequests") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${isActive("/staff/borrowrequests") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
+              }`}
           >
             <img
               src={borrow}
@@ -144,9 +140,8 @@ export default function AdminSideBar() {
           {/* Account Requests */}
           <Link
             to="/staff/accountRequests"
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${
-              isActive("/staff/accountRequests") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
-            }`}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${isActive("/staff/accountRequests") ? 'bg-[#25388c]' : 'hover:bg-[#f8fafc]'
+              }`}
           >
             <img
               src={user}

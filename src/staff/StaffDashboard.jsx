@@ -4,6 +4,7 @@ import { MenuBook, PersonAdd, CalendarToday, Add, ChevronRight, People, Bookmark
 import StateCard from '../components/StateCard';
 import AdminSideBar from '../components/AdminSideBar';
 import CoverImage from '../components/CoverImage';
+import toast from 'react-hot-toast';
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -42,11 +43,14 @@ export default function StaffDashboard() {
         }
       });
 
+      const data = await response.json();
       if (!response.ok) {
+        if (data.error) {
+          toast.error(data);
+        }
         throw new Error(`Failed to fetch insights`);
       }
 
-      const data = await response.json();
       setInsights(data);
     } catch (error) {
       console.log(`Error fetching insights:`, error);
@@ -72,11 +76,15 @@ export default function StaffDashboard() {
           "Authorization": `Bearer ${user?.token || ''}`
         }
       });
+      const data = await response.json();
       if (!response.ok) {
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        }
         throw new Error(`Failed to fetch books`);
       }
-      const data = await response.json();
-      console.log(data);
+
       setRecentBooks(data.content);
     } catch (error) {
       console.log(`Error fetching books:`, error);
@@ -104,15 +112,17 @@ export default function StaffDashboard() {
         }
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
-        console.log(data);
+        if (data.error) {
+          toast.error(data.error);
+          setRecentRequests([]);
+          return;
+        }
         setRecentRequests([]);
         throw new Error(`Failed to fetch requests`);
       }
 
-      const data = await response.json();
-      console.log("borrowings: ", data);
       setRecentRequests(data.content);
 
     } catch (error) {
@@ -142,12 +152,13 @@ export default function StaffDashboard() {
       if (!response.ok) {
         if (data.error) {
           setRequests([]);
-          throw new Error(data.error);
+          toast.error(data.error);
+          return;
         }
+        setRequests([]);
         throw new Error(`Failed to fetch requests`);
       }
 
-      console.log(data);
       setRecentAccountRequests(data.content);
 
     } catch (error) {

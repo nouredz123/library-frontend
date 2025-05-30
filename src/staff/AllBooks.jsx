@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom';
-import book from '../assets/book.png';
 import plusBook from '../assets/Plusbook.png';
 import Pagination from '../components/Pagination';
 import toast from 'react-hot-toast';
@@ -26,7 +25,6 @@ export default function AllBooks() {
     description: "",
   });
   const [mode, setMode] = useState("list");
-  const [user, setUser] = useState({});
   const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("all");
@@ -46,35 +44,32 @@ export default function AllBooks() {
   const [shouldSearch, setShouldSearch] = useState(false);
 
 
-  // Set mode if navigated with "add" state
   useEffect(() => {
     if (location.state?.mode === "add") {
       setMode("add");
     }
   }, [location.state]);
 
-  // Trigger search if query is empty
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setShouldSearch(true);
     }
   }, [searchQuery]);
 
-  // Reset page to 0 on department or sort change, then trigger search
   useEffect(() => {
     if (currentPage !== 0) {
-      setCurrentPage(0); // Triggers another effect
+      setCurrentPage(0);
     } else {
       setShouldSearch(true);
     }
   }, [selectedDepartment, sortOrder]);
 
-  // Trigger search when currentPage changes (e.g. pagination)
+
   useEffect(() => {
     setShouldSearch(true);
   }, [currentPage]);
 
-  // Centralized fetchBooks call
+
   useEffect(() => {
     if (shouldSearch) {
       fetchBooks();
@@ -82,20 +77,18 @@ export default function AllBooks() {
     }
   }, [shouldSearch]);
 
-  // Manual search on Enter key
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && e.target.value.trim() !== "") {
       if (currentPage !== 0) {
-        setCurrentPage(0); // Will trigger search via currentPage effect
+        setCurrentPage(0);
       } else {
-        setShouldSearch(true); // Trigger search directly
+        setShouldSearch(true);
       }
     }
   };
   const validateForm = () => {
     let valid = true;
 
-    // Validate required fields
     if (!bookData.title || !bookData.author || !bookData.publisher || !bookData.editionYear || !bookData.isbn || !bookData.cote || !bookData.numberOfCopies || !bookData.department) {
       toast.error("Please fill in all required fields.");
       valid = false;
@@ -175,16 +168,18 @@ export default function AllBooks() {
           "Authorization": `Bearer ${user?.token || ''}`
         }
       });
+      const data = await response.json();
       if (!response.ok) {
+        if (data.error) {
+          toast.error(data.error)
+          return;
+        }
         throw new Error(`Failed to fetch books`);
       }
-      const data = await response.json();
-      console.log(data);
       setBooks(data.content);
       setTotalPages(data.totalPages);
       setTotalBooks(data.totalElements);
     } catch (error) {
-      console.log(`Error fetching books:`, error);
       toast.error("Failed to load books");
     } finally {
       setIsLoading(false);
@@ -205,17 +200,20 @@ export default function AllBooks() {
         },
       });
 
+      const data = await response.json();
       if (!response.ok) {
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        }
         throw new Error("Failed to add copies");
       }
 
-      const data = await response.json();
       toast.success(`Successfully added ${numberOfNewCopies} new copies`);
       fetchBooks();
       closeDetailModal();
     } catch (error) {
       toast.error("Error adding new copies");
-      console.error(error);
     }
   };
 
@@ -229,17 +227,20 @@ export default function AllBooks() {
         }
       });
 
+      const data = await response.json();
       if (!response.ok) {
+        if (dara.error) {
+          toast.error(data.error);
+          return;
+        }
         throw new Error("Failed to delete the book");
       }
 
-      const data = await response.json();
       console.log(data);
       toast.success("Book deleted successfully");
       fetchBooks();
     } catch (error) {
       toast.error("Error deleting the book");
-      console.log(`Error deleting the book:`, error);
     }
   };
   const removeBookCopy = async (inventoryNumber) => {
@@ -252,23 +253,19 @@ export default function AllBooks() {
         }
       });
 
+      const data = await response.json();
       if (!response.ok) {
-        const data = await response.json();
         if (data.error) {
           toast.error(data.error);
           return;
-        } else {
-          throw new Error("Failed to delete the bookCopy");
         }
+        throw new Error("Failed to delete the bookCopy");
       }
 
-      const data = await response.json();
-      console.log(data);
       toast.success("BookCopy deleted successfully");
       fetchBooks();
     } catch (error) {
       toast.error("Error deleting the bookCopy");
-      console.log(`Error deleting the bookCopy:`, error);
     }
   };
 
@@ -302,19 +299,32 @@ export default function AllBooks() {
           coverUrl: bookData.coverUrl
         })
       });
-
+      const data = await response.json();
       if (!response.ok) {
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        }
         throw new Error(`Failed to add the book`);
       }
 
-      const data = await response.json();
-      console.log(data);
       toast.success("Book added successfully");
       setMode("list");
       fetchBooks();
+      setBookData({
+        title: "",
+        author: "",
+        publisher: "",
+        editionYear: "",
+        isbn: "",
+        cote: "",
+        numberOfCopies: "",
+        coverUrl: "",
+        department: "Computer Science",
+        description: "",
+      })
     } catch (error) {
       toast.error("Error adding the book");
-      console.log(`Error adding the book:`, error);
     }
   };
 
@@ -354,12 +364,11 @@ export default function AllBooks() {
   };
 
   const validateIsbn = async () => {
-    const isbn = bookData.isbn.trim();
+    const isbn = bookData.isbn.trim().replaceAll("-", "");
     if (isbn === "") {
       setErrors(prev => ({ ...prev, isbn: "" }));
       return;
     }
-
     const isValidIsbn10 = /^\d{9}[\dX]$/.test(isbn);
     const isValidIsbn13 = /^\d{13}$/.test(isbn);
 
@@ -367,9 +376,10 @@ export default function AllBooks() {
       setErrors(prev => ({ ...prev, isbn: "Invalid ISBN format (must be ISBN-10 or ISBN-13)." }));
       return;
     }
+
     const user = JSON.parse(localStorage.getItem("user"));
     try {
-      const response = await fetch(`${apiUrl}/api/staff/validate/isbn?isbn=${encodeURIComponent(isbn)}`, {
+      const response = await fetch(`${apiUrl}/api/staff/validate/isbn?isbn=${encodeURIComponent(bookData.isbn)}`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${user?.token || ''}`

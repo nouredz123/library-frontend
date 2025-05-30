@@ -1,16 +1,10 @@
 import {
-  ArrowLeft,
   Book,
-  ChevronLeft,
   ChevronRight,
-  Logout,
   LocalLibrary,
-  MenuBook,
-  AutoStories,
   Bookmark,
   LibraryBooks,
   Schedule,
-  Info,
   School,
 } from "@mui/icons-material";
 import React, { useState, useEffect } from "react";
@@ -18,132 +12,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { departments } from "../constants";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
-import toast from "react-hot-toast";
-import BookCard from "../components/BookCard";
-import BookDetailsModal from "../components/BookDetailsModal";
-import BorrowModal from "../components/BorrowModal";
-import Pagination from "../components/Pagination";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 export default function Dashboard() {
-  const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [books, setBooks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [isPageLoaded, setIsPageLoaded] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalBooks, setTotalBooks] = useState(0);
-
-  const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
-  const [borrowModalBook, setBorrowModalBook] = useState(null);
-
-  const [selectedBook, setSelectedBook] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const handleCardClick = (book) => {
-    setSelectedBook(book);
-    setIsModalOpen(true);
-  };
-
   const navigate = useNavigate();
 
   // Animation effect after component mounts
   useEffect(() => {
+    isTokenValid();
     setIsPageLoaded(true);
   }, []);
 
-  // Reset page when department changes
-  useEffect(() => {
-    if (selectedDepartment && currentPage !== 0) {
-      setCurrentPage(0);
-    } else if (selectedDepartment) {
-      fetchBooksByDepartment(selectedDepartment, currentPage);
-    }
-  }, [selectedDepartment]);
-
-  // Fetch books when page changes
-  useEffect(() => {
-    if (selectedDepartment) {
-      fetchBooksByDepartment(selectedDepartment, currentPage);
-    }
-  }, [currentPage]);
-
-  const borrow = async (bookId) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    console.log("token:", user.token);
-    try {
-      const response = await fetch(`${apiUrl}/api/member/borrow`, {
-        method: "POST",
-        headers: {
-          "Content-type": "application/json",
-          Authorization: `Bearer ${user.token}`,
-        },
-        body: JSON.stringify({
-          bookId,
-          memberId: user.id,
-          pickupDate: "2025-01-01",
-          returnDate: "2525-09-09",
-        }),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error);
-      }
-      const data = await response.json();
-      toast.success("Book borrowed successfully! Please collect from the library desk.");
-      console.log("Borrow successful:", data);
-    } catch (error) {
-      toast.error(error.message);
-      console.log("Error:", error.message);
-    }
-  };
-
-  // Function to fetch books by department with pagination
-  const fetchBooksByDepartment = async (department, page = 0) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    console.log("token:", user?.token);
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `${apiUrl}/api/member/books?department=${department}&page=${page}&size=8`,
-        {
-          method: "GET",
-          headers: {
-            "Content-type": "application/json",
-            'Authorization': `Bearer ${user?.token || ""}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const data = await response.json();
-        if (data.error) {
-          toast.error(data.error);
-          return;
-        } else {
-          throw new Error(`Failed to fetch ${department} collection`);
-        }
-      }
-
-      const data = await response.json();
-      console.log(data);
-      setBooks(data.content || []);
-      setTotalPages(data.totalPages);
-      setTotalBooks(data.totalElements);
-      setSelectedDepartment(department);
-    } catch (error) {
-      console.log(`Error fetching ${department} collection:`, error);
-      setError(`Failed to load library collection: ${error.message}`);
-      toast.error("Failed to load books from library catalog. Please try again later.");
-      setBooks([]);
-      setTotalPages(0);
-      setTotalBooks(0);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const logout = () => {
     localStorage.removeItem("user");
@@ -154,13 +34,30 @@ export default function Dashboard() {
       window.history.pushState(null, "", window.location.href);
     };
   };
+  const isTokenValid = async () => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/validate/token?token=${user.token}&email=${user.email}"`, {
+        method: "GET",
+        headers: {
+          'Content-type': 'application/json',
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        if (data === true) {
+          logout();
+        }
+      }
+    } catch (error) {
+      console.log(error.message)
+    }
+  }
 
   //  CSS classes for animations
   const fadeInClass = isPageLoaded
     ? "opacity-100 translate-y-0"
     : "opacity-0 translate-y-10";
-  const staggeredDelay = (index) =>
-    `transition-all duration-700 ease-out delay-${index * 200}`;
 
   return (
     <div className="flex justify-center w-full bg-[#101624] min-h-screen fixed inset-0 overflow-y-auto">
