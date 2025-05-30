@@ -36,7 +36,7 @@ const SignUp = () => {
     fullName: "",
     identifier: "",
     dateOfBirth: "",
-    major: "",
+    department: "",
     wilaya: "",
     cardBase64: "",
     cardContentType: ""
@@ -77,7 +77,7 @@ const SignUp = () => {
     };
 
     // Validate required fields
-    if (!formData.email || !formData.password || !formData.fullName || !formData.identifier || !formData.dateOfBirth || !formData.wilaya || !formData.cardBase64) {
+    if (!formData.email || !formData.password || !formData.fullName || !formData.identifier || !formData.department || !formData.dateOfBirth || !formData.wilaya || !formData.cardBase64) {
       toast.error("Please fill in all required fields.");
       valid = false;
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
@@ -114,6 +114,7 @@ const SignUp = () => {
           identifier: formData.identifier,
           dateOfBirth: formData.dateOfBirth,
           birthWilaya: formData.wilaya,
+          department: formData.department,
           role: "member",
           cardBase64: formData.cardBase64,
           contentType: formData.cardContentType,
@@ -299,7 +300,7 @@ const SignUp = () => {
                   className="flex items-center justify-center h-[50px] px-3 py-2 w-full bg-[#232839] rounded-[5px] border-none text-white text-base leading-6 outline-none"
                   id='departemnt'
                   name="Department"
-                  value={formData.dempartment}
+                  value={formData.department}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
