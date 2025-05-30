@@ -236,7 +236,7 @@ const SignUp = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      document.getElementById("dateOfBirth")?.focus();
+                      document.getElementById("universityId")?.focus();
                     }
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, email: e.target.value })) }}
@@ -259,7 +259,7 @@ const SignUp = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      document.getElementById("password")?.focus();
+                      document.getElementById("dateOfBirth")?.focus();
                     }
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, identifier: e.target.value })) }}
@@ -327,7 +327,7 @@ const SignUp = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
-                      document.getElementById("universityId")?.focus();
+                      document.getElementById("password")?.focus();
                     }
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, wilaya: e.target.value })) }}
