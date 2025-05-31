@@ -38,9 +38,6 @@ const Profile = () => {
 
 
   const navigate = useNavigate();
-  useEffect(() => {
-    isTokenValid();
-  }, []);
 
   // Animation  after component mounts
   useEffect(() => {
@@ -130,25 +127,6 @@ const Profile = () => {
       window.history.pushState(null, "", window.location.href);
     };
   };
-  const isTokenValid = async () => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    try {
-      const response = await fetch(`${apiUrl}/api/auth/validate/token?token=${user.token}&email=${user.email}"`, {
-        method: "GET",
-        headers: {
-          'Content-type': 'application/json',
-        }
-      });
-      const data = await response.json();
-      if (response.ok) {
-        if (data !== true) {
-          logout();
-        }
-      }
-    } catch (error) {
-      console.log(error.message)
-    }
-  }
 
   // CSS classes for animations
   const fadeInClass = isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10";
