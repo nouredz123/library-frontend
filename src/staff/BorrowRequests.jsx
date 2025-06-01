@@ -345,7 +345,7 @@ const BorrowRequests = () => {
                               Mark as Picked Up
                             </button>
                           )}
-                          {request.status === "PICKED_UP" && (
+                          {request.status === "PICKED_UP" || request.status === "OVERDUE" && (
                             <button
                               onClick={() => openModal(request)}
                               className="px-3 py-2 bg-[#dcfce7] text-[#15803d] rounded text-sm hover:bg-[#bbf7d0]"

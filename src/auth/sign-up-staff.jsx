@@ -37,23 +37,11 @@ const SignUpStaff = () => {
 
   const validateForm = () => {
     let valid = true;
-    const newErrors = {
-      email: "",
-      password: ""
-    };
-
     // Validate required fields
     if (!formData.email || !formData.password || !formData.fullName || !formData.adminCode) {
       toast.error("Please fill in all required fields.");
       valid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format.";
-      valid = false;
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters.";
-      valid = false;
     }
-    setErrors(newErrors);
     return valid;
   };
 
@@ -98,12 +86,49 @@ const SignUpStaff = () => {
       console.error("Error:", error);
     }
   };
+   const isEmailValid = async () => {
+    setErrors(prev => ({ ...prev, email: "" }));
+    if (!formData.email) {
+      setErrors(prev => ({ ...prev, email: "Email is required" }));
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: "Invalid email format." }));
+      return false;
+    }
+
+    const user = JSON.parse(localStorage.getItem("user"));
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/validate/email?email=${encodeURIComponent(formData.email)}`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${user?.token || ''}`
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data === true) {
+          setErrors(prev => ({ ...prev, email: "" }));
+          return true;
+        } else {
+          setErrors(prev => ({ ...prev, email: "email already exists." }));
+          return false;
+        }
+      } else {
+        setErrors(prev => ({ ...prev, email: "Something went wrong." }));
+        return false;
+      }
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+  };
 
   return (
     <div className="relative bg-[rgb(16,22,36)] flex flex-col justify-center w-full bg-cover" style={{ backgroundImage: `url(${exportBg})` }}>
       <div className='absolute inset-0 bg-cover bg-center opacity-25' style={{ backgroundImage: `url(${noiseBackground})` }}></div>
-      <div className="w-full grid grid-cols-2 gap-16 z-10">
-        <div className="flex flex-col ml-16 my-24 px-8 py-10 rounded-3xl items-start shadow-[0px_0px_70px_0px_rgba(0,0,0,0.2)] bg-gradient-to-b from-[#12141d] to-[#12151f]">
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-16 z-10">
+        <div className="flex flex-col  mx-auto lg:ml-16 my-24 px-8 py-10 rounded-3xl items-start shadow-[0px_0px_70px_0px_rgba(0,0,0,0.2)] bg-gradient-to-b from-[#12141d] to-[#12151f]">
           <header className="flex flex-col items-start gap-4 w-full">
             <div className="inline-flex items-center gap-2">
               <img className="w-16 h-16" src={logo} alt="Logo" />
@@ -136,6 +161,11 @@ const SignUpStaff = () => {
                   onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      setErrors(prev => ({ ...prev, fullName: "" }));
+                      if (!formData.fullName) {
+                        setErrors(prev => ({ ...prev, fullName: "Full name is required." }));
+                        return;
+                      }
                       e.preventDefault();
                       document.getElementById("email")?.focus();
                     }
@@ -152,10 +182,13 @@ const SignUpStaff = () => {
                   placeholder="Enter your email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  onKeyDown={(e) => {
+                  onKeyDown={async (e) => {
                     if (e.key === 'Enter') {
-                      e.preventDefault();
-                      document.getElementById("adminCode")?.focus();
+                      const isValid = await isEmailValid();
+                      if (isValid) {
+                        e.preventDefault();
+                        document.getElementById("adminCode")?.focus();
+                      }
                     }
                   }}
                 />
@@ -177,6 +210,11 @@ const SignUpStaff = () => {
                     onChange={(e) => setFormData(prev => ({ ...prev, adminCode: e.target.value }))}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
+                        setErrors(prev => ({ ...prev, adminCode: "" }));
+                      if (!formData.adminCode) {
+                        setErrors(prev => ({ ...prev, adminCode: "Admin code is required." }));
+                        return;
+                      }
                         e.preventDefault();
                         document.getElementById("password")?.focus();
                       }
@@ -190,6 +228,9 @@ const SignUpStaff = () => {
                     />
                   </div>
                 </div>
+                {errors.adminCode && (
+                  <span className="text-[#ff4d4d] text-xs mt-1">{errors.adminCode}</span>
+                )}
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
@@ -232,7 +273,7 @@ const SignUpStaff = () => {
           </form>
         </div>
         <div
-          className="h-full w-full bg-cover bg-center"
+          className="h-full w-full bg-cover bg-center hidden lg:block"
           style={{ backgroundImage: `url(${backgroundImage})` }}
         ></div>
       </div>

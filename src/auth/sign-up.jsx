@@ -41,7 +41,8 @@ const SignUp = () => {
   });
   const [errors, setErrors] = useState({
     email: "",
-    password: ""
+    password: "",
+    identifier: ""
   });
   const [showPassword, setShowPassword] = useState(false);
 
@@ -67,30 +68,18 @@ const SignUp = () => {
     };
     reader.readAsDataURL(file);
   };
+
   const validateForm = () => {
     let valid = true;
-    const newErrors = {
-      email: "",
-      password: ""
-    };
-
     // Validate required fields
     if (!formData.email || !formData.password || !formData.fullName || !formData.identifier || !formData.department || !formData.dateOfBirth || !formData.wilaya || !formData.cardBase64) {
       toast.error("Please fill in all required fields.");
       valid = false;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Invalid email format.";
-      valid = false;
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters.";
-      valid = false;
     }
-    setErrors(newErrors);
     return valid;
   };
 
-  const handleSignUp = (e) => {
-    e.preventDefault();
+  const handleSignUp = () => {
     const isValid = validateForm();
     if (!isValid) return;
     signup();
@@ -106,7 +95,6 @@ const SignUp = () => {
         },
         body: JSON.stringify({
           fullName: formData.fullName,
-          username: formData.email,
           email: formData.email,
           password: formData.password,
           identifier: formData.identifier,
@@ -119,12 +107,12 @@ const SignUp = () => {
         })
       });
 
-       const data = await response.json();
+      const data = await response.json();
       if (!response.ok) {
-        if(data.error){
+        if (data.error) {
           toast.error(data.error);
           return;
-        }else{
+        } else {
           throw new Error("Somthing went wrong, please try again later.");
         }
       }
@@ -145,7 +133,17 @@ const SignUp = () => {
     }
   }
 
-  const validateEmail = async () => {
+  const isEmailValid = async () => {
+    setErrors(prev => ({ ...prev, email: "" }));
+    if (!formData.email) {
+      setErrors(prev => ({ ...prev, email: "Email is required" }));
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: "Invalid email format." }));
+      return false;
+    }
+
     const user = JSON.parse(localStorage.getItem("user"));
     try {
       const response = await fetch(`${apiUrl}/api/auth/validate/email?email=${encodeURIComponent(formData.email)}`, {
@@ -156,17 +154,20 @@ const SignUp = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         if (data === true) {
           setErrors(prev => ({ ...prev, email: "" }));
+          return true;
         } else {
           setErrors(prev => ({ ...prev, email: "email already exists." }));
+          return false;
         }
       } else {
         setErrors(prev => ({ ...prev, email: "Something went wrong." }));
+        return false;
       }
     } catch (err) {
       console.error(err);
+      return false;
     }
   };
 
@@ -175,8 +176,8 @@ const SignUp = () => {
   return (
     <div className="relative bg-[rgb(16,22,36)] flex flex-col justify-center w-full bg-cover" style={{ backgroundImage: `url(${exportBg})` }}>
       <div className='absolute inset-0 bg-cover bg-center opacity-25' style={{ backgroundImage: `url(${noiseBackground})` }}></div>
-      <div className=" w-full grid grid-cols-2 gap-16 z-10">
-        <div className="flex flex-col ml-16 my-24 px-8 py-10 rounded-3xl items-start shadow-[0px_0px_70px_0px_rgba(0,0,0,0.2)] bg-gradient-to-b from-[#12141d] to-[#12151f]">
+      <div className=" w-full grid grid-cols-1 lg:grid-cols-2 gap-16 z-10">
+        <div className="flex flex-col mx-auto lg:ml-16 my-24 px-8 py-10 rounded-3xl items-start shadow-[0px_0px_70px_0px_rgba(0,0,0,0.2)] bg-gradient-to-b from-[#12141d] to-[#12151f]">
           <header className="flex flex-col items-start gap-4 w-full">
             <div className="inline-flex items-center gap-2">
               <img className="w-16 h-16" src={logo} alt="Logo" />
@@ -208,12 +209,20 @@ const SignUp = () => {
                   value={formData.fullName}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      setErrors(prev => ({ ...prev, fullName: "" }));
+                      if (!formData.fullName) {
+                        setErrors(prev => ({ ...prev, fullName: "Full name is required." }));
+                        return;
+                      }
                       e.preventDefault();
                       document.getElementById("email")?.focus();
                     }
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, fullName: e.target.value })) }}
                 />
+                {errors.fullName && (
+                  <span className="text-[#ff4d4d] text-xs mt-1">{errors.fullName}</span>
+                )}
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
@@ -225,14 +234,17 @@ const SignUp = () => {
                   type="email"
                   placeholder="Enter your email"
                   value={formData.email}
-                  onKeyDown={(e) => {
+                  onKeyDown={async (e) => {
                     if (e.key === 'Enter') {
-                      e.preventDefault();
-                      document.getElementById("universityId")?.focus();
+                      const isValid = await isEmailValid();
+                      if (isValid) {
+                        e.preventDefault();
+                        document.getElementById("universityId")?.focus();
+                      }
                     }
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, email: e.target.value })) }}
-                  onBlur={validateEmail}
+                  onBlur={isEmailValid}
                 />
                 {errors.email && (
                   <span className="text-[#ff4d4d] text-xs mt-1">{errors.email}</span>
@@ -246,17 +258,38 @@ const SignUp = () => {
                   id='universityId'
                   type="text"
                   name="universityId"
-                  placeholder="e.g., 322345575412"
+                  placeholder="e.g., UN27012024232337654121"
                   value={formData.identifier}
+                  min={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      setErrors(prev => ({ ...prev, identifier: "" }));
+                      if (!formData.identifier) {
+                        setErrors(prev => ({ ...prev, identifier: "Identifier is required." }));
+                        return;
+                      } else if (!formData.identifier.startsWith("UN") || formData.identifier.length !== 22) {
+                        setErrors(prev => ({ ...prev, identifier: "Identifier must start with 'UN' and be exactly 22 characters." }));
+                        return;
+                      }
                       e.preventDefault();
                       document.getElementById("dateOfBirth")?.focus();
                     }
                   }}
-                  onChange={(e) => { setFormData(prev => ({ ...prev, identifier: e.target.value })) }}
-
+                  onChange={(e) => { setFormData(prev => ({ ...prev, identifier: e.target.value.toUpperCase() })) }}
+                  onBlur={() => {
+                    setErrors(prev => ({ ...prev, identifier: "" }));
+                    if (!formData.identifier) {
+                      setErrors(prev => ({ ...prev, identifier: "Identifier is required." }));
+                      return;
+                    } else if (!formData.identifier.startsWith("UN") || formData.identifier.length !== 22) {
+                      setErrors(prev => ({ ...prev, identifier: "Identifier must start with 'UN' and be exactly 22 characters." }));
+                      return;
+                    }
+                  }}
                 />
+                {errors.identifier && (
+                  <span className="text-[#ff4d4d] text-xs mt-1">{errors.identifier}</span>
+                )}
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
@@ -270,11 +303,23 @@ const SignUp = () => {
                     value={formData.dateOfBirth}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
+                        setErrors(prev => ({ ...prev, dateOfBirth: "" }));
+                        if (!formData.dateOfBirth) {
+                          setErrors(prev => ({ ...prev, dateOfBirth: "Date Of Birth is required." }));
+                          return;
+                        }
                         e.preventDefault();
                         document.getElementById("departemnt")?.focus();
                       }
                     }}
                     onChange={(e) => { setFormData(prev => ({ ...prev, dateOfBirth: e.target.value })) }}
+                    onBlur={() => {
+                      setErrors(prev => ({ ...prev, dateOfBirth: "" }));
+                      if (!formData.dateOfBirth) {
+                        setErrors(prev => ({ ...prev, dateOfBirth: "Date Of Birth is required." }));
+                        return;
+                      }
+                    }}
                     style={{
                       colorScheme: 'dark',
                       '::WebkitCalendarPickerIndicator': {
@@ -283,6 +328,9 @@ const SignUp = () => {
                       }
                     }}
                   />
+                  {errors.dateOfBirth && (
+                    <span className="text-[#ff4d4d] text-xs mt-1">{errors.dateOfBirth}</span>
+                  )}
                 </div>
               </div>
 
@@ -295,11 +343,23 @@ const SignUp = () => {
                   value={formData.department}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      setErrors(prev => ({ ...prev, department: "" }));
+                      if (!formData.department) {
+                        setErrors(prev => ({ ...prev, department: "Department is required." }));
+                        return;
+                      }
                       e.preventDefault();
                       document.getElementById("wilaya")?.focus();
                     }
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, department: e.target.value })) }}
+                  onBlur={() => {
+                    setErrors(prev => ({ ...prev, department: "" }));
+                    if (!formData.department) {
+                      setErrors(prev => ({ ...prev, department: "Department is required." }));
+                      return;
+                    }
+                  }}
                 >
                   <option value="" disabled >Select your department</option>
                   <option value="Computer Science">Computer Science</option>
@@ -307,6 +367,9 @@ const SignUp = () => {
                   <option value="Chemistry">Chemistry</option>
                   <option value="Physics">Physics</option>
                 </select>
+                {errors.department && (
+                  <span className="text-[#ff4d4d] text-xs mt-1">{errors.department}</span>
+                )}
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
@@ -318,17 +381,32 @@ const SignUp = () => {
                   value={formData.wilaya}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      setErrors(prev => ({ ...prev, wilaya: "" }));
+                      if (!formData.wilaya) {
+                        setErrors(prev => ({ ...prev, wilaya: "Birth wilaya is required." }));
+                        return;
+                      }
                       e.preventDefault();
                       document.getElementById("password")?.focus();
                     }
                   }}
                   onChange={(e) => { setFormData(prev => ({ ...prev, wilaya: e.target.value })) }}
+                  onBlur={() => {
+                    setErrors(prev => ({ ...prev, wilaya: "" }));
+                    if (!formData.wilaya) {
+                      setErrors(prev => ({ ...prev, wilaya: "Birth wilaya is required." }));
+                      return;
+                    }
+                  }}
                 >
                   <option value="" disabled>Select your birth wilaya</option>
                   {algerianWilayas.map((wilaya, index) => (
                     <option key={index} value={wilaya}>{wilaya}</option>
                   ))}
                 </select>
+                {errors.wilaya && (
+                  <span className="text-[#ff4d4d] text-xs mt-1">{errors.wilaya}</span>
+                )}
               </div>
 
               <div className="flex flex-col items-start gap-2 w-full">
@@ -343,11 +421,29 @@ const SignUp = () => {
                     value={formData.password}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
+                        setErrors(prev => ({ ...prev, password: "" }));
+                        if (!formData.password) {
+                          setErrors(prev => ({ ...prev, password: "password is required." }));
+                          return;
+                        } else if (formData.password.length < 8) {
+                          setErrors(prev => ({ ...prev, password: "Password must be at least 8 characters." }));
+                          return;
+                        }
                         e.preventDefault();
                         document.getElementById("file-upload")?.focus();
                       }
                     }}
                     onChange={(e) => { setFormData(prev => ({ ...prev, password: e.target.value })) }}
+                    onBlur={() => {
+                      setErrors(prev => ({ ...prev, password: "" }));
+                      if (!formData.password) {
+                        setErrors(prev => ({ ...prev, password: "password is required." }));
+                        return;
+                      } else if (formData.password.length < 8) {
+                        setErrors(prev => ({ ...prev, password: "Password must be at least 8 characters." }));
+                        return;
+                      }
+                    }}
                   />
                   <div className="relative inline-block cursor-pointer" onClick={togglePassword}>
                     <img className="w-5 h-5 hover:scale-110 hover:opacity-80 transition-transform duration-200" src={!showPassword ? eyeIcon : eyeSlachIcon} alt="Toggle password" />
@@ -372,11 +468,23 @@ const SignUp = () => {
                     accept="image/*"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
+                        setErrors(prev => ({ ...prev, card: "" }));
+                        if (!formData.cardBase64) {
+                          setErrors(prev => ({ ...prev, card: "Card is required." }));
+                          return;
+                        }
                         e.preventDefault();
                         handleSignUp();
                       }
                     }}
                     onChange={handleImageChange}
+                    onBlur={() => {
+                      setErrors(prev => ({ ...prev, card: "" }));
+                      if (!formData.cardBase64) {
+                        setErrors(prev => ({ ...prev, card: "Card is required." }));
+                        return;
+                      }
+                    }}
                     required
                     className="absolute opacity-0 w-0 h-0"
                   />
@@ -403,7 +511,7 @@ const SignUp = () => {
             </div>
           </form>
         </div>
-        <img src={backgroundImage} className="h-full w-full bg-cover bg-center" loading='lazy' />
+        <img src={backgroundImage} className=" h-full w-full bg-cover bg-center hidden lg:block" loading='lazy' />
       </div>
     </div>
   );

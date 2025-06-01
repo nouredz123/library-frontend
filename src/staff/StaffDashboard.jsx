@@ -58,13 +58,14 @@ export default function StaffDashboard() {
       setIsLoading(false);
     }
   };
+
   const fetchRecentBooks = async () => {
     const user = JSON.parse(localStorage.getItem("user"));
     let sortBy = "addedDate";
     let direction = "desc";
     const params = new URLSearchParams();
     params.append("page", 0);
-    params.append("size", 3)
+    params.append("size", 3);
     params.append("sortBy", sortBy);
     params.append("direction", direction);
 
@@ -78,13 +79,9 @@ export default function StaffDashboard() {
       });
       const data = await response.json();
       if (!response.ok) {
-        if (data.error) {
-          toast.error(data.error);
-          return;
-        }
+        setRecentBooks([]);
         throw new Error(`Failed to fetch books`);
       }
-
       setRecentBooks(data.content);
     } catch (error) {
       console.log(`Error fetching books:`, error);
@@ -99,7 +96,7 @@ export default function StaffDashboard() {
     const params = new URLSearchParams();
     params.append("status", "PENDING");
     params.append("page", 0);
-    params.append("size", 10);
+    params.append("size", 4);
     params.append("sortBy", sortBy);
     params.append("direction", direction);
 
@@ -115,7 +112,6 @@ export default function StaffDashboard() {
       const data = await response.json();
       if (!response.ok) {
         if (data.error) {
-          toast.error(data.error);
           setRecentRequests([]);
           return;
         }

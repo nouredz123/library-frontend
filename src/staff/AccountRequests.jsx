@@ -197,8 +197,6 @@ export default function AccountRequests() {
         setSelectedImage(null);
     };
 
-
-
     return (
         <div className="bg-[#f8f8ff] rounded-2xl relative min-h-screen overflow-y-auto">
             <AdminSideBar />
@@ -432,6 +430,8 @@ export default function AccountRequests() {
                     </div>
                 </div>
             )}
+
+
 
             {/* Review Modal */}
             {modalUser && (

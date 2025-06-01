@@ -85,14 +85,13 @@ const Profile = () => {
       const data = await response.json();
       if (!response.ok) {
         if (data.error) {
-          toast.error(data.error);
-          return;
+          throw new Error(data.error);
         }
         throw new Error();
       }
       setBorrowings(data.content);
     } catch (error) {
-      toast.error("Error fetching borrowings");
+      console.error("Error fetching borrowings");
     }
   };
 

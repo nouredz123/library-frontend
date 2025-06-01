@@ -110,9 +110,11 @@ export default function SignIn() {
 
   return (
     <div className="relative bg-[rgb(16,22,36)] flex flex-col justify-center w-full bg-cover" style={{ backgroundImage: `url(${exportBg})` }}>
+
       <div className='absolute inset-0 bg-cover bg-center opacity-25' style={{ backgroundImage: `url(${noiseBackground})` }}></div>
-      <div className="w-full grid grid-cols-2 gap-16 z-10 items-start min-h-screen">
-        <div className="flex flex-col ml-16 my-24 px-8 py-10 rounded-3xl items-start shadow-[0px_0px_70px_0px_rgba(0,0,0,0.2)] bg-gradient-to-b from-[#12141d] to-[#12151f]">
+      
+      <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-16 z-10 items-start min-h-screen">
+        <div className="flex flex-col  mx-auto lg:ml-16 my-24 px-8 py-10 rounded-3xl items-start shadow-[0px_0px_70px_0px_rgba(0,0,0,0.2)] bg-gradient-to-b from-[#12141d] to-[#12151f]">
           <header className="flex flex-col items-start gap-4 w-full">
             <div className="inline-flex items-center gap-2">
               <img className="w-16 h-16" src={logo} alt="Logo" />
@@ -201,7 +203,7 @@ export default function SignIn() {
             </div>
           </form>
         </div>
-        <img src={backgroundImage} className="w-full object-cover" loading='lazy' alt="Background" />
+        <img src={backgroundImage} className="w-full object-cover  hidden lg:block" loading='lazy' alt="Background" />
       </div>
     </div>
   );

@@ -36,6 +36,7 @@ export default function Search() {
 
     const navigate = useNavigate();
     const location = useLocation();
+    
     const handleCardClick = (book) => {
         setSelectedBook(book);
         setIsModalOpen(true);
@@ -129,6 +130,7 @@ export default function Search() {
             if (!response.ok) {
                 if (data.error) {
                     toast.error(data.error);
+                    setBooks([]);
                     return;
                 }
                 throw new Error("Something went wrong, please try again later.");
