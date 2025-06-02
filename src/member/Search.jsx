@@ -269,7 +269,7 @@ export default function Search() {
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     onKeyDown={handleKeyPress}
                                     className="w-full px-4 py-3 pl-10 bg-[#232738] border-2 border-[#232738] rounded-lg text-[#d5dfff] focus:outline-none focus:border-[#db4402] transition-all duration-300"
-                                    placeholder="Search by title, author, or ISBN..."
+                                    placeholder={`Search by ${searchType == "all" ? "title, author, ISBN, or Cote..." : searchType + "..."} `}
                                 />
                                 <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#d5dfff]" />
                                 {searchQuery && (
@@ -290,6 +290,7 @@ export default function Search() {
                                 <option value="title">Title</option>
                                 <option value="author">Author</option>
                                 <option value="isbn">ISBN</option>
+                                <option value="cote">Cote</option>
                             </select>
                             <button
                                 onClick={handleSearch}

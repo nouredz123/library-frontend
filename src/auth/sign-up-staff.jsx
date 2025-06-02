@@ -147,7 +147,7 @@ const SignUpStaff = () => {
             </div>
           </header>
 
-          <form className="flex flex-col items-start gap-4 w-full" onSubmit={handleSignUp}>
+          <form className="flex flex-col items-start gap-4 w-full">
             <div className="flex flex-col items-start gap-5 w-full py-2">
 
               <div className="flex flex-col items-start gap-2 w-full">
@@ -243,6 +243,20 @@ const SignUpStaff = () => {
                     placeholder="Enter your password"
                     value={formData.password}
                     onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        setErrors(prev => ({ ...prev, password: "" }));
+                      if (!formData.password) {
+                        setErrors(prev => ({ ...prev, password: "Admin code is required." }));
+                        return;
+                      }else if (formData.password.length < 8) {
+                        setErrors(prev => ({ ...prev, password: "Password must be at least 8 characters."  }));
+                        return;
+                      }
+                        e.preventDefault();
+                        document.getElementById("password")?.focus();
+                      }
+                    }}
                   />
                   <div className="relative inline-block cursor-pointer" onClick={togglePassword}>
                     <img
@@ -259,7 +273,8 @@ const SignUpStaff = () => {
             </div>
 
             <button
-              type="submit"
+              type="button"
+              onClick={handleSignUp}
               className="flex items-center justify-center gap-2 px-8 py-4 w-full bg-[#db4402] rounded-md min-h-[56px] hover:bg-[#e05206] hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] active:scale-98 active:shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
             >
               <span className="text-white text-base leading-6 font-bold whitespace-nowrap">Register as staff</span>

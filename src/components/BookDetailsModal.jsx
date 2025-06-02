@@ -15,7 +15,7 @@ export default function BookDetailsModal({ isOpen, onClose, book, borrowing = nu
       <div className="bg-[#1a2238] text-white rounded-lg p-6 max-w-2xl w-full relative flex">
 
         {/* Left side: Book Cover */}
-        <div className="flex-shrink-0 w-[232px] h-[288px] bg-gray-800 ">
+        <div className="flex-shrink-0 w-[232px] min-h-[288px] bg-gray-800 ">
           <CoverImage coverUrl={book?.coverUrl} title={book.title}/>
         </div>
 
@@ -35,8 +35,10 @@ export default function BookDetailsModal({ isOpen, onClose, book, borrowing = nu
           <div className="space-y-2 text-[#d5dfff]">
             <p><span className="font-bold">Author:</span> {book?.author || 'Unknown'}</p>
             <p><span className="font-bold">Publisher:</span> {book?.publisher || 'Unknown Publisher'}</p>
+            <p><span className="font-bold">Publication year:</span> {book?.editionYear || 'N/A'}</p>
             <p><span className="font-bold">ISBN:</span> {book?.isbn || 'N/A'}</p>
             <p><span className="font-bold">Department:</span> {book?.department || 'General'}</p>
+            <p className="font-thin"><span className="font-bold">Description:</span> {book?.description}</p>
             <p><span className="font-bold ">Status:</span> <span className={`${book.available ? "text-green-500" : "text-red-500"}`}>{book.available ? "Available" : "Not available"}</span></p>
           </div>
 
